@@ -1,0 +1,70 @@
+#summary LogStash Design
+#labels Phase-Design
+
+= Introduction =
+
+This page is an overview on the basic design of LogStash and helps define some different LogStash-related terms.
+
+
+= Logs =
+
+Our goal is to be able to index any kind of log. We have provided facilities for indexing the two different types of logs:
+
+ * text-based
+ * JSON-based
+
+JSON logs might seem like an odd choice, but we end up turning everything into key/value pairs, so it's really the lowest common denominator.
+
+Logs are made up of many "events". These types of logs happen to be line-based, but each line is really an "event". We will discuss what an "event" is composed of, and then discuss how we import both types of logs.
+
+== Events ==
+
+Each event is made up of key-value pairs that describe the event, and some meta-data to go along with the event itself. The meta-data is:
+
+ * @DATE: a normalized (Unix time; seconds since the epoch) timestamp for the event
+ * @SOURCE_HOST: the hostname that generated the log event
+ * @LINE: the human-readable representation of the event
+
+We index all of the key-value pairs and all of the meta-data except @LINE. @LINE is the only piece of data with an event that we actually _store_ in the database. This means that you will be searching for different @LINEs by the key-value pairs that produced it.
+
+== Calculating @DATE ==
+
+It is usually more desirable to figure out an event's true timestamp by extracting the date from the actual event than looking at the current time on the indexer when we receive the log-line (may have been queued, buffer when writing to the log, etc). LogStash allows you to define which key (field) represents the time, and a `strftime`-expression to match the date (we use `strptime` to parse the date).
+
+You may have a log format without a date or based on some kind of real-time feed that doesn't have a date, and in that case, LogStash will assign the current time as the event time.
+
+== Text Logs ==
+
+Text logs are traditionally hard to search because sometimes you have to write complex regular expressions (CPU intensive) to match a certain piece of the log. If we turn the log event into key-value pairs with [Grok], it because much simpler (and cheaper, CPU-wise) to search. [Grok] is an expert log processing tool. One of it's output options is JSON, and we use that to turn an event that starts out as an opaque line of text into a more descriptive JSON object that describes the event. We then index the key-value pairs generated, and store the original text log as @LINE (the human-readable representation of the event).
+
+For more details and examples, see [TextLogs].
+
+== JSON Logs ==
+
+JSON logs are very hard to search on disk without a specialized tool (i.e. first parse the JSON, and then search the fields), although it is a great data representation. We hope that by making JSON logs easy to index that more programs will start having an option to log in JSON (easier to represent more complex data structures and events). There is not much parsing to do other than calculating the meta-data @DATE and @LINE. Unlike a text log, the original input (a JSON object in text form) isn't very human friendly. A JSON log definition comes with a `line_format` that is a Ruby ERB template string defining the human readable version of the event (@LINE).
+
+For more details and example, see [JsonLogs].
+
+= Components =
+
+There are a few major components that make up LogStash. All communication between the components is based on an open JSON API to allow for maximum flexibility, and to allow you to replace the components with something more customised for your environment.
+
+== Indexer (daemon) ==
+
+The indexer's purpose is to receive log lines in real time and index them. We commit the index to disk every 30 seconds or so by default, which provides for fairly real-time log indexing.
+
+== Agent (daemon) ==
+
+The agent runs on all of your hosts and is configured with log paths and log types. It watches all of the log paths and when a new line (event) comes in, we send it up to the indexer. Eventually there should be some clever ways to configure the agent to batch up sending logs (might not need real-time indexing) and have some network rate-limiting (if a program goes wild logging, we don't want to overwhelm our management network).
+
+== Import (CLI utility) ==
+
+An easy way to import existing logs into the system. You'll probably only run this a few times in the beginning of a new log type, before you get your agent configured to stream in all of the new log events being written to disk.
+
+== Searcher (daemon) ==
+
+The searcher can be queried with a list of log types (or blank to search everything), a query in FQL (Ferret Query Language; see [QueryLanguage]), and other meta-data about the search (# of results, sort order, etc). It returns a list of events, sorted as requested (if nothing specified, by score) along with the match score for each event.
+
+== Search (CLI utility) ==
+
+A quick way to query the Searcher for command-line searching.
