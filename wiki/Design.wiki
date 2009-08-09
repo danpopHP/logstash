@@ -14,6 +14,8 @@ Our goal is to be able to index any kind of log. We have provided facilities for
 
 JSON logs might seem like an odd choice, but we end up turning everything into key-value pairs, so it's really the lowest common denominator.
 
+When logs are defined, they may a set of user-defined attributes. These can be used when selecting which logs to search (vs. having to remember all of the different log types you defined).
+
 Logs are made up of many "events". These log encodings happen to be line-based, but each line is really an "event". We will discuss what an "event" is composed of, and then discuss how we import both log formats.
 
 == Events ==
