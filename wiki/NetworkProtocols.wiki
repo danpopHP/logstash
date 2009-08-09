@@ -2,11 +2,10 @@
 
 = General Network Protocol =
 
-General: JSON over TCP.
-Wire encoding: [length][message data]
-
-  * length is a 4 byte integer representing the length of the message.
-  * message data is plain text json.
+  * General: JSON over TCP.
+  * Wire encoding: `<length><message data>`
+    * length is a 4 byte integer representing the length of the message.
+    * message data is plain text json.
 
 :: In the future, we may accept compressed data instead of plain text json
 data. The first few bytes of the 'data' portion can be used to determine if the
