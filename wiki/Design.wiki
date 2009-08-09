@@ -58,6 +58,8 @@ The indexer's purpose is to receive log lines in real time and index them. We co
 
 == Agent (daemon) ==
 
+See: AgentDesign
+
 The agent runs on all of your hosts and is configured with log paths and log types. It watches all of the log paths and when a new line (event) comes in, we send it up to the indexer. Eventually there should be some clever ways to configure the agent to batch up sending logs (might not need real-time indexing) and have some network rate-limiting (if a program goes wild logging, we don't want to overwhelm our management network).
 
 == Import (CLI utility) ==
