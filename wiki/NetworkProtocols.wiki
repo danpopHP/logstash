@@ -3,9 +3,8 @@
 = General Network Protocol =
 
 General: JSON over TCP.
-Message encoding: [version][length][message data]
+Message encoding: [length][message data]
 
-  * version is a 1 byte integer representing the protocol version of this message
   * length is a 4 byte integer representing the length of the message.
   * message data is plain text json.
 
@@ -13,7 +12,33 @@ Message encoding: [version][length][message data]
 data. The first few bytes of the 'data' portion can be used to determine if the
 data is compressed and by what means. However, we do not currently support compression.
 
-== Agent IndexEvent ==
+== Base Protocol ==
+
+{{{
+{ version: <version>.
+  messages: [
+    <message>,
+    <message 2>,
+    ...
+    <message N>,
+  ]
+}
+}}}
+
+== Base Message ==
+
+{{{
+{ call: <function>,
+  id: <unique id>,
+  args: {
+    <args>
+  },
+}
+}}}
+  
+  * The unique id is for the receiver to respond (if required) to the message.
+
+== IndexEvent message ==
 
 Sender: Agent
 Receiver: Indexer
@@ -34,6 +59,6 @@ Purpose: Tell the indexer to index a new event.
 }
 }}}
 
-  * "log_type" is the log type. The type can be any type known to the Indexer. Base types include syslog and json.
+  * "log_type" is the log type. Log types are defined on the Indexer.
   * "message" is the contents of the event. It can be a string (ie; line from a logfile) or a full JSON object.
   * metadata contains other attributes relative to this event. At a minimum, the Agent should include the source host and application.
