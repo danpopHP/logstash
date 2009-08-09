@@ -5,24 +5,23 @@
 
 This page is an overview on the basic design of LogStash and helps define some different LogStash-related terms.
 
-
 = Logs =
 
-Our goal is to be able to index any kind of log. We have provided facilities for indexing the two different types of logs:
+Our goal is to be able to index any kind of log. We have provided facilities for indexing the two different encodings of logs:
 
  * text-based
  * JSON-based
 
-JSON logs might seem like an odd choice, but we end up turning everything into key/value pairs, so it's really the lowest common denominator.
+JSON logs might seem like an odd choice, but we end up turning everything into key-value pairs, so it's really the lowest common denominator.
 
-Logs are made up of many "events". These types of logs happen to be line-based, but each line is really an "event". We will discuss what an "event" is composed of, and then discuss how we import both types of logs.
+Logs are made up of many "events". These log encodings happen to be line-based, but each line is really an "event". We will discuss what an "event" is composed of, and then discuss how we import both log formats.
 
 == Events ==
 
 Each event is made up of key-value pairs that describe the event, and some meta-data to go along with the event itself. The meta-data is:
 
  * @DATE: a normalized (Unix time; seconds since the epoch) timestamp for the event
- * @SOURCE_HOST: the hostname that generated the log event
+ * @SOURCE: the hostname and log_type that generated the log event ("host:log_type")
  * @LINE: the human-readable representation of the event
 
 We index all of the key-value pairs and all of the meta-data except @LINE. @LINE is the only piece of data with an event that we actually _store_ in the database. This means that you will be searching for different @LINEs by the key-value pairs that produced it.
@@ -35,7 +34,11 @@ You may have a log format without a date or based on some kind of real-time feed
 
 == Text Logs ==
 
-Text logs are traditionally hard to search because sometimes you have to write complex regular expressions (CPU intensive) to match a certain piece of the log. If we turn the log event into key-value pairs with [Grok], it because much simpler (and cheaper, CPU-wise) to search. [Grok] is an expert log processing tool. One of it's output options is JSON, and we use that to turn an event that starts out as an opaque line of text into a more descriptive JSON object that describes the event. We then index the key-value pairs generated, and store the original text log as @LINE (the human-readable representation of the event).
+Text logs are traditionally hard to search because sometimes you have to write complex regular expressions (CPU intensive) to match a certain piece of the log. If we turn the log event into key-value pairs with [Grok], it because much simpler (and cheaper, CPU-wise) to search. [Grok] is an expert log processing tool. One of it's output options is JSON, and we use that to turn an event that starts out as an opaque line of text into a more descriptive JSON object that describes the event.
+
+For one log type, multiple grok matches might be defined. The order is important, because once the first grok line matches, we go straight to indexing. In something complex like Linux syslog, you might define a few more specific patterns (better key-value pairs for a sudo log line, a pam sucess/failure, etc) and then fall back to the generic pattern (standard syslog line -- date, host, progname, message).
+
+We then index the key-value pairs generated, and store the original text log as @LINE (the human-readable representation of the event).
 
 For more details and examples, see [TextLogs].
 
