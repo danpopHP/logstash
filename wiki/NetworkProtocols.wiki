@@ -3,8 +3,9 @@
 = General Network Protocol =
 
 General: JSON over TCP.
-Message encoding: [length][message data]
+Message encoding: [version][length][message data]
 
+  * version is a 1 byte integer representing the protocol version of this message
   * length is a 4 byte integer representing the length of the message.
   * message data is plain text json.
 
