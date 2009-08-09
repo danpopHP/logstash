@@ -6,15 +6,15 @@ The purpose of agents is to know where and how to get logs and other data into t
 
 = Operating Conditions =
 
-* Don't overload the network: local log bandwidth may become too large to safely transport in real-time over the network
-* Agent must not negatively impact (within reason) with operation of the other services running on the host
-* Multiple Agents may overwhelm a single Indexer. The Indexer should be able redirect Agents to other Indexers.
+ * Don't overload the network: local log bandwidth may become too large to safely transport in real-time over the network
+ * Agent must not negatively impact (within reason) with operation of the other services running on the host
+ * Multiple Agents may overwhelm a single Indexer. The Indexer should be able redirect Agents to other Indexers.
 
 = Configuration =
 
-* Agents need to know where logfiles live.
-* Needs to know about log rotation and follow files appropriately.
-* Needs to know who the Indexer servers are
+ * Agents need to know where logfiles live.
+ * Needs to know about log rotation and follow files appropriately.
+ * Needs to know who the Indexer servers are
 
 = Sample Config =
 
