@@ -15,7 +15,7 @@ data is compressed and by what means. However, we do not currently support compr
 == Agent IndexEvent ==
 
 Sender: Agent
-Receiver: Indexer
+
 Purpose: Tell the indexer to add a new event.
 
 {{{
@@ -32,6 +32,6 @@ Purpose: Tell the indexer to add a new event.
 }
 }}}
 
-* "log_type" is the log type. The type can be any type known to the Indexer. Base types include syslog and json.
-* "message" is the contents of the event. It can be a string (ie; line from a logfile) or a full JSON object.
-* metadata contains other attributes relative to this event. At a minimum, the Agent should include the source host and application.
+  * "log_type" is the log type. The type can be any type known to the Indexer. Base types include syslog and json.
+  * "message" is the contents of the event. It can be a string (ie; line from a logfile) or a full JSON object.
+  * metadata contains other attributes relative to this event. At a minimum, the Agent should include the source host and application.
