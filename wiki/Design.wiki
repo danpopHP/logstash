@@ -3,7 +3,7 @@
 
 = Introduction =
 
-This page is an overview on the basic design of LogStash and helps define some different LogStash-related terms.
+This page is an overview on the basic design of LogStash. It might help to be familiar with some LogStash [Terms].
 
 = Logs =
 
