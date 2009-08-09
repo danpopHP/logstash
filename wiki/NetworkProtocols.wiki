@@ -1,0 +1,37 @@
+#summary Network Protocol Documentation
+
+= General Network Protocol =
+
+General: JSON over TCP.
+Message encoding: [length][message data]
+
+  * length is a 4 byte integer representing the length of the message.
+  * message data is plain text json.
+
+:: In the future, we may accept compressed data instead of plain text json
+data. The first few bytes of the 'data' portion can be used to determine if the
+data is compressed and by what means. However, we do not currently support compression.
+
+== Agent IndexEvent ==
+
+Sender: Agent
+Receiver: Indexer
+Purpose: Tell the indexer to add a new event.
+
+{{{
+{ call: "IndexEvent"
+  args: {
+    type: <string : log type>,
+    message: <string OR object : log data>,
+    metadata: {
+      source_host: <string : hostname originating the event>
+      source_app: <string : app originating the event>
+      <other attributes here>
+    },
+  },
+}
+}}}
+
+* "log_type" is the log type. The type can be any type known to the Indexer. Base types include syslog and json.
+* "message" is the contents of the event. It can be a string (ie; line from a logfile) or a full JSON object.
+* metadata contains other attributes relative to this event. At a minimum, the Agent should include the source host and application.
