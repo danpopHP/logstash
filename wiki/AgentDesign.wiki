@@ -1,0 +1,35 @@
+#summary LogStash Agent Design
+
+= Agent Purpose =
+
+The purpose of agents is to know where and how to get logs and other data into the logstash Indexer.
+
+= Operating Conditions =
+
+* Don't overload the network: local log bandwidth may become too large to safely transport in real-time over the network
+* Agent must not negatively impact (within reason) with operation of the other services running on the host
+* Multiple Agents may overwhelm a single Indexer. The Indexer should be able redirect Agents to other Indexers.
+
+= Configuration =
+
+* Agents need to know where logfiles live.
+* Needs to know about log rotation and follow files appropriately.
+* Needs to know who the Indexer servers are
+
+= Sample Config =
+
+Let's use YAML for simplicity.
+{{{
+---
+- /var/log/*
+- /var/log/apache2/access.log
+}}}
+
+= Smartness =
+
+For simpler configuration, the agent should look for expected log rotation
+patterns when a wildcard is given. For example, if it finds 'messages',
+'message.0', 'messages.1.gz', etc, it should figure out that the real logfile
+is 'messages'.
+
+Do we even want this?
