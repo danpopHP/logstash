@@ -25,10 +25,10 @@ data is compressed and by what means. However, we do not currently support compr
 }
 }}}
 
-== Base Message ==
+== Basic Request ==
 
 {{{
-{ call: <function>,
+{ request: <function>,
   id: <unique id>,
   args: {
     <args>
@@ -38,6 +38,21 @@ data is compressed and by what means. However, we do not currently support compr
   
   * The unique id is for the receiver to respond (if required) to the message.
 
+== Basic Response ==
+
+{{{
+{ response: <function>,
+  id: <unique id>,
+  args: {
+    <args>
+  },
+}
+}}}
+  
+  * The unique id is for the receiver to respond (if required) to the message.
+
+= Specific Messages ==
+
 == IndexEvent message ==
 
 Sender: Agent
@@ -46,7 +61,8 @@ Receiver: Indexer
 Purpose: Tell the indexer to index a new event.
 
 {{{
-{ call: "IndexEvent"
+{ request: "IndexEvent"
+  id: <id>
   args: {
     type: <string : log type>,
     message: <string OR object : log data>,
@@ -62,3 +78,61 @@ Purpose: Tell the indexer to index a new event.
   * "log_type" is the log type. Log types are defined on the Indexer.
   * "message" is the contents of the event. It can be a string (ie; line from a logfile) or a full JSON object.
   * metadata contains other attributes relative to this event. At a minimum, the Agent should include the source host and application.
+
+== IndexEvent message response ==
+
+Sender: Indexer
+Receiver: Agent
+
+Purpose: Acknowledge successful receipt of an event and report any errors.
+
+{{{
+{ response: "IndexEvent"
+  id: <id>
+  args: {
+    code: <integer : IndexEvent_response_code>
+    error: "error message"               # optional
+  }
+}
+}}}
+
+  * "code" should be the return code from the IndexEvent request. Zero (0) means success and acknowledgement.
+  * "error" is an optional error message. There will be no message if the code is 0.
+
+
+=== Example IndexEvent conversation ===
+
+
+From Agent to Indexer:
+{{{
+{ version: 1
+  messages: [
+    { request: "IndexEvent",
+      id: 100,
+      args {
+        type: "apache",
+        message: "65.57.245.11 - - [03/Oct/2006:18:38:03 ...",
+        metadata: {
+          source_host: "web2.example.com",
+          source_app: "apache2",
+        }
+      }
+    }
+  ]
+}
+}}}
+
+From Indexer to Agent:
+{{{
+{ version: 1
+  messages: [
+    { response: "IndexEvent",
+      id: 100,
+      args {
+        code: 0,
+      }
+    }
+  ]
+}
+}}}
+
