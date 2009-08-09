@@ -4,6 +4,10 @@
 
 The purpose of agents is to know where and how to get logs and other data into the logstash Indexer.
 
+= Agent+Indexer Network Protocol =
+
+See NetworkProtocols
+
 = Operating Conditions =
 
  * Don't overload the network: local log bandwidth may become too large to safely transport in real-time over the network
