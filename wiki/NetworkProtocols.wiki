@@ -15,8 +15,9 @@ data is compressed and by what means. However, we do not currently support compr
 == Agent IndexEvent ==
 
 Sender: Agent
+Receiver: Indexer
 
-Purpose: Tell the indexer to add a new event.
+Purpose: Tell the indexer to index a new event.
 
 {{{
 { call: "IndexEvent"
