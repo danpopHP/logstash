@@ -68,7 +68,6 @@ Purpose: Tell the indexer to index a new event.
     message: <string OR object : log data>,
     metadata: {
       source_host: <string : hostname originating the event>
-      source_app: <string : app originating the event>
       <other attributes here>
     },
   },
