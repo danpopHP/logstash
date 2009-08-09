@@ -112,7 +112,6 @@ From Agent to Indexer:
         message: "65.57.245.11 - - [03/Oct/2006:18:38:03 ...",
         metadata: {
           source_host: "web2.example.com",
-          source_app: "apache2",
         }
       }
     }
