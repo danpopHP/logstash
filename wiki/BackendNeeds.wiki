@@ -1,4 +1,4 @@
-#summary Discussion/docs about what kinds of queries and indexing features we need.
+#summary Discussion/docs about what kinds of query, indexing, and other features a good backend would need
 
 = Dynamic/Arbitrary Fields =
 
@@ -15,3 +15,9 @@ Example: Query for logs in a given date range.
 Many search engine systems only support strings. Attempting to query 'foo > 40' will find results where 'foo == 330' because it uses string comparisons, and with strings, "40" > "330" is true.
 
 A workaround for string-only engines is to encode the numbers as bytes. Encode '40' as a 4, 8, or whatever, byte value, 0x00000028, etc. This encoding allows for proper comparison as strings
+
+= Scale input to thousands/second =
+
+Logging events happen all the time, many times per second. Ideal case is the index is updated in real-time, or is only a very small amount of time behind real time.
+
+We must be able to keep up with live event input.
