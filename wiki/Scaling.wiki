@@ -23,24 +23,24 @@ I (jordan) did some to look at places where we're doing too much and could do wi
 Configuration:
 
 System: 
-* 1 host, 4 x 2gHz
+  * 1 host, 4 x 2gHz
 Code: 
-* cgrok + grok ruby at svn 2249
-* logstash at svn 109
+  * cgrok + grok ruby at svn 2249
+  * logstash at svn 109
 
 Configuration:
-* stompserver, run without arguments.
-* logparsed running 4 processes
-* 1 agent feeding 8000 lines of haproxy logs
-* 2 logstashd indexers
-* Everything talking to 'localhost'
+  * stompserver, run without arguments.
+  * logparsed running 4 processes
+  * 1 agent feeding 8000 lines of haproxy logs
+  * 2 logstashd indexers
+  * Everything talking to 'localhost'
 
 Final output from the parsers:
-rate: 245.16/sec
-rate: 265.00/sec
-rate: 268.21/sec
-rate: 272.75/sec
+  * rate: 245.16/sec
+  * rate: 265.00/sec
+  * rate: 268.21/sec
+  * rate: 272.75/sec
 
 Final output from the indexers:
-rate: 345.26/sec
-rate: 423.09/sec
+  * rate: 345.26/sec
+  * rate: 423.09/sec
