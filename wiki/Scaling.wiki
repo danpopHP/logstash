@@ -10,6 +10,8 @@ The indexserver will split into two components: parseserver and indexserver. All
 
 To scale indexing time (and more storage, really), we support running multiple indexservers. They cannot point at the same source (NAS/SAN/same disk/whatever) because ferret requires an exclusive write lock. This means that we also need to run a searchserver on each indexserver machine to make the disparate indexes available.
 
+Parseservers and indexservers can live on the same machine. Since they are not multi-threaded (ruby threading has a global interpreter lock), if you have an N-core machine, it's reasonable to run N total parseservers/indexservers on that machine (beware of I/O, though).
+
 Traditionally, ferret itself does the "merging" of results. Instead, we're going to include a sample class that can send out a search to all the searchservers (via a message bus topic? have to figure out when we're "done" searching). The program doing the searching will receive all of the various results, and do the merging server-side.
 
 This prevents us from doing "score-based" sorting (a feature of ferret). We think this is probably an OK thing; we figure the most useful usage of a product like this is range based with a filter (i.e. show me all apache GET requests between Monday and Wednesday). The searching agent can easily merge the results and sort by @DATE (or even another key). There are still scores associated with each document, but they are only relevant to the documents on the same indexserver -- so it would be a mistake (search quality wise) to merge all of the results together and sort by score.
