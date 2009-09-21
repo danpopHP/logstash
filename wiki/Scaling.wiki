@@ -15,3 +15,32 @@ Parseservers and indexservers can live on the same machine. Since they are not m
 Traditionally, ferret itself does the "merging" of results. Instead, we're going to include a sample class that can send out a search to all the searchservers (via a message bus topic? have to figure out when we're "done" searching). The program doing the searching will receive all of the various results, and do the merging server-side.
 
 This prevents us from doing "score-based" sorting (a feature of ferret). We think this is probably an OK thing; we figure the most useful usage of a product like this is range based with a filter (i.e. show me all apache GET requests between Monday and Wednesday). The searching agent can easily merge the results and sort by @DATE (or even another key). There are still scores associated with each document, but they are only relevant to the documents on the same indexserver -- so it would be a mistake (search quality wise) to merge all of the results together and sort by score.
+
+= Data =
+
+I (jordan) did some to look at places where we're doing too much and could do with some simple optimizations. After doing some optimizing, here are my results:
+
+Configuration:
+
+System: 
+* 1 host, 4 x 2gHz
+Code: 
+* cgrok + grok ruby at svn 2249
+* logstash at svn 109
+
+Configuration:
+* stompserver, run without arguments.
+* logparsed running 4 processes
+* 1 agent feeding 8000 lines of haproxy logs
+* 2 logstashd indexers
+* Everything talking to 'localhost'
+
+Final output from the parsers:
+rate: 245.16/sec
+rate: 265.00/sec
+rate: 268.21/sec
+rate: 272.75/sec
+
+Final output from the indexers:
+rate: 345.26/sec
+rate: 423.09/sec
