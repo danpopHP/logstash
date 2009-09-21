@@ -44,3 +44,5 @@ Final output from the parsers:
 Final output from the indexers:
   * rate: 345.26/sec
   * rate: 423.09/sec
+
+Timing a single indexer on those same 8000 inputs took 24 seconds: 9.12s user 3.60s system 53% cpu 23.928 total
