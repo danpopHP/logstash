@@ -1,48 +1,35 @@
 #summary Discussion about how the service will horizontally scale to deal with storage problems and real-time indexing speed.
+#labels Phase-Deploy,Phase-Design
 
 = Introduction =
 
-The indexserver as it stands today is really two parts: a parser and an indexer. Profiling shows that parsing takes most of the time when we're receiving a message. Since we're using message bus technology, scaling horizontally is easy (message-wise).
+There are two major driving requirements for being able to scale:
 
-= Details =
+* rate of indexing new log messages
+* backend storage for indexes
 
-The indexserver will split into two components: parseserver and indexserver. All of the LogStash agents will write the raw log lines to a shared message queue. The parseservers will all subscribe to the same queue (which will end up in a round-robin distribution of raw log lines to the various parseservers). The parseservers do the heavy lifting (grok, strptime, etc) and send the parsed results up to the indexserver queue.
+Since we're using message bus technology, scaling horizontally is easy (message-wise). Most brokers will treat multiple subscribers to the same queue in a round-robin fashion. This makes running multiple parses and indexers trivial.
 
-To scale indexing time (and more storage, really), we support running multiple indexservers. They cannot point at the same source (NAS/SAN/same disk/whatever) because ferret requires an exclusive write lock. This means that we also need to run a searchserver on each indexserver machine to make the disparate indexes available.
+The `logstashd` daemon provides both indexer and parser services, but they do not necessarily have to be on the same machine.
 
-Parseservers and indexservers can live on the same machine. Since they are not multi-threaded (ruby threading has a global interpreter lock), if you have an N-core machine, it's reasonable to run N total parseservers/indexservers on that machine (beware of I/O, though).
+= Parser =
 
-Traditionally, ferret itself does the "merging" of results. Instead, we're going to include a sample class that can send out a search to all the searchservers (via a message bus topic? have to figure out when we're "done" searching). The program doing the searching will receive all of the various results, and do the merging server-side.
+The parser is mostly CPU bound (grok parsing, Ruby strptime, general string I/O). You can run multiple parsers on the same machine (1 per core is reasonable). To control the number of parsers, use the `-p` flag to `logstashd`. If you want to run a `logstashd` that _only_ does parsing, use the `-I` flag to disable the indexer. Parsers are forked at the process level (because Ruby multi-threading doesn't really scale -- there is a global interpreter lock). The parsers all subscribe to the `logstash` queue (which the agent sends data to). Once they finish parsing a log line, data is sent to the `logstash-index` queue.
 
-This prevents us from doing "score-based" sorting (a feature of ferret). We think this is probably an OK thing; we figure the most useful usage of a product like this is range based with a filter (i.e. show me all apache GET requests between Monday and Wednesday). The searching agent can easily merge the results and sort by @DATE (or even another key). There are still scores associated with each document, but they are only relevant to the documents on the same indexserver -- so it would be a mistake (search quality wise) to merge all of the results together and sort by score.
+= Indexer =
+
+The indexer is a consumer of CPU and I/O (throughput & space usage) for writing new logs and searching existing logs. Each indexer must have it's *own* `logstash_dir` defined in a config file; multiple indexers cannot read/write from the same ferret index. Multiple indexers may live on the same host (with different `logstash_dir`s, of course) or on different hosts. This means that log storage is also distributed (if there are 10 indexers running, 10 consecutive log lines might be on 10 different hosts). The search client will query all indexers and collate the results by date. If you want to run an indexer by itself without any parsers, use the `-p 0` flag to `logstashd`.
+
+= Broker =
+
+You may find the actual message broker as a choke point in your LogStash infrastructure. For this reason, we recommend running Rabbit MQ, which supports a "cluster" mode across multiple hosts.
+
+= Search Notes =
+
+Traditionally, ferret itself does the "merging" of results from multiple indexes. But since our indexes may be on different machines, and we are communicating with each index through a message bus, we must do the merging of results on the search client side.
+
+This prevents us from doing "score-based" sorting (a feature of ferret; scores are assigned to results based on how closely they match the query). We think this is probably an OK thing; we figure the most useful usage of a product like this is range based with a date filter (i.e. show me all apache GET requests between this Monday and Wednesday). The searching agent can easily merge the results and sort by `@DATE`. There are still scores associated with each document, but they are only relevant to the documents from the same index, so it would be a mistake (search quality wise) to merge all of the results together and sort by score (or even show the score).
 
 = Data =
 
-I (jordan) did some to look at places where we're doing too much and could do with some simple optimizations. After doing some optimizing, here are my results:
-
-Configuration:
-
-System: 
-  * 1 host, 4 x 2gHz
-Code: 
-  * cgrok + grok ruby at svn 2249
-  * logstash at svn 109
-
-Configuration:
-  * stompserver, run without arguments.
-  * logparsed running 4 processes
-  * 1 agent feeding 8000 lines of haproxy logs
-  * 2 logstashd indexers
-  * Everything talking to 'localhost'
-
-Final output from the parsers:
-  * rate: 245.16/sec
-  * rate: 265.00/sec
-  * rate: 268.21/sec
-  * rate: 272.75/sec
-
-Final output from the indexers:
-  * rate: 345.26/sec
-  * rate: 423.09/sec
-
-Timing a single indexer on those same 8000 inputs took 24 seconds: 9.12s user 3.60s system 53% cpu 23.928 total
+(I removed the existing data, since so much has changed since then, but we need some real-life results.)
