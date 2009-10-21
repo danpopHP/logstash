@@ -54,8 +54,6 @@ For more details and example, see [JsonLogs].
 
 There are a few major components that make up LogStash. All the components talk the AMQP protocol to a central message broker (we recommend Rabbit MQ). The message broker allows us to easily scale and provide more reliability for delivering messages.
 
-based on an open JSON API to allow for maximum flexibility, and to allow you to replace the components with something more customised for your environment.
-
 == Agent ==
 
 The agent runs on every host you wish to collect logs from. It runs multiple threads (one per watched file) and sends new log lines to the parser (which eventually hit the indexer for actual indexing). The agent is "smart" in how we watch log files: automatically detects log-file roll-over (log rotation) and remembers file location for clean restarts without duplicate log lines indexed.
