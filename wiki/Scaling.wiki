@@ -5,8 +5,8 @@
 
 There are two major driving requirements for being able to scale:
 
-* rate of indexing new log messages
-* backend storage for indexes
+ * rate of indexing new log messages
+ * backend storage for indexes
 
 Since we're using message bus technology, scaling horizontally is easy (message-wise). Most brokers will treat multiple subscribers to the same queue in a round-robin fashion. This makes running multiple parses and indexers trivial.
 
