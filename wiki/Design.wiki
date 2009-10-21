@@ -7,7 +7,7 @@ This page is an overview on the basic design of LogStash. It might help to be fa
 
 = Logs =
 
-Our goal is to be able to index any kind of log. We have provided facilities for indexing the two different encodings of logs:
+Our goal is to be able to index any kind of log. We have initially provided facilities for indexing two different encodings of logs:
 
  * text-based
  * JSON-based
