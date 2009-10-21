@@ -5,7 +5,10 @@
 
 This exists out of a desire to keep wording consistent and not start overriding one term to mean different things in different contexts (makes discussing design and problems very hard).
 
+ * *broker* - message queue that supports AMQP (Rabbit MQ is an example)
  * *event* - a set of key-values describing one event in a log
+ * *indexer* - daemon that indexes already-parsed log lines and searches
  * *log* - a set of related events
  * *log encoding* - how a log was originally represented coming into LogStash (text, JSON, etc).
  * *log type* - a definition of a log in the LogStash config (encoding, patterns, etc)
+ * *parser* - daemon that parses log lines (grok, calculating `@DATE`, etc) and sends to indexer
