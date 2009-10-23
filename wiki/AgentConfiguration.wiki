@@ -1,0 +1,10 @@
+#summary Agent Configuration
+#labels agent
+
+= LogStash Agent Configuration =
+
+= Requirements =
+
+* rubygem: amqp
+* rubygem: uuid
+* rubygem: file-tail
