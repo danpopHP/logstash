@@ -5,6 +5,6 @@
 
 = Requirements =
 
-* rubygem: amqp
-* rubygem: uuid
-* rubygem: file-tail
+  * rubygem: amqp
+  * rubygem: uuid
+  * rubygem: file-tail
