@@ -1,4 +1,4 @@
-#summary Details on installing the logstash server
+#summary Details on installing and configuring the logstash server
 #labels Phase-Deploy
 
 = Introduction =
