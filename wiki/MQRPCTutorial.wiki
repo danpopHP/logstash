@@ -17,11 +17,11 @@ Here's an example of a "Add" request. For demonstrative purposes, we'll give the
 require 'mqrpc'
 
 class AddRequest < MQRPC::RequestMessage
-  hashbind :numbers, "/args/numbers"
+  argument :numbers
 end
 
 class AddResponse < MQRPC::ResponseMessage
-  hashbind :sum, "/args/sum"
+  argument :sum
 end
 }}}
 
@@ -34,18 +34,18 @@ require 'mqrpc'
 require 'add_message'
 
 class Adder < MQRPC::Agent
-  def AddRequestHandler(message)
-    puts "Got #{message.class.name} for #{message.numbers.inspect}"
-    sum = message.numbers.reduce { |a,b| a + b }
-    
+  def AddRequestHandler(request)
+    puts "Got #{request.class.name} for #{request.numbers.inspect}"
+    sum = request.numbers.reduce { |a,b| a + b }
+
     # Make the response
-    response = AddResponse.new
-    response.id = message.id
+    response = AddResponse.new(request)
     response.sum = sum
-    yield response 
+    yield response
   end # def AddRequestHandler
-  
+
   def run
+    # listen for messages on the 'adder' queue
     subscribe("adder")
     super
   end
@@ -61,7 +61,7 @@ adder.run
 Now let's create the client.
 
 {{{
-require 'mqrpc'
+c'
 require 'add_message'
 
 class AdderClient < MQRPC::Agent
@@ -71,12 +71,14 @@ class AdderClient < MQRPC::Agent
 
     # send our request to the 'adder' queue
     # and run the given block for the response
-    op = sendmsg("adder", request) do |msg|
+    sendmsg("adder", request) do |msg|
       puts "Got result: #{msg.sum}"
 
       # Say we're done.
       close
     end
+
+    # Run the agent 'run' method, which is our main method.
     super
   end # def
 end # class AdderClient < MQRPC::Agent
@@ -84,4 +86,12 @@ end # class AdderClient < MQRPC::Agent
 config = MQRPC::Config.new({ "mqhost" => "dev.rabbitmq.com" })
 adder = AdderClient.new(config)
 adder.run
+}}}
+
+=== Running it ===
+
+{{{
+# server                               |    # client
+% ruby add_server.rb                   |    % ruby add_client.rb
+Got AddRequest for [10, 20, 30, 40]    |    Got result: 100
 }}}
