@@ -21,6 +21,8 @@ It's also easy to proxy emssages from one message broker to another, allowing fo
 
 Thrift gets us none of the above, requiring us to implement them all. More code equals more bugs, and bugs in your network/messaging layer cause all kinds of sadness.
 
+Thrift also doesn't support streaming, so if we wanted to split a large response into multiple messages (to provide responsive search experience), we'd have to implement that ourselves.
+
 = Message Encoding =
 
 == Why JSON? ==
