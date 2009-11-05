@@ -1,0 +1,13 @@
+#summary RPC over a Message Queue
+
+= MQRPC =
+
+MQRPC is an RPC system that uses a message queue.
+
+Currently the implementation uses JSON for message serialization and AMQP for transport.
+
+= Features =
+
+Because we use a message queue for transport, we can:
+  * scale horizontally
+  * recover from failed RPC handlers and nodes
