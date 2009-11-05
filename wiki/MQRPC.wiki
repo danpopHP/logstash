@@ -11,3 +11,7 @@ Currently the implementation uses JSON for message serialization and AMQP for tr
 Because we use a message queue for transport, we can:
   * scale horizontally
   * recover from failed RPC handlers and nodes
+
+= Tutorial =
+
+  * MQRPCTutorial
