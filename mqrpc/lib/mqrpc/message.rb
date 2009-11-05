@@ -1,7 +1,5 @@
 require 'json'
-require 'set'
-# vim macro to replace 'hashbind :foo, "bar"' with two methods.
-# yypkct:def lxf,sreturn @data[A]oenddef Jdt:xf,s(val)return @data[A] = valend
+require 'thread'
 
 module BindToHash
   def hashbind(method, key)
@@ -17,23 +15,23 @@ module BindToHash
   end
 
   def self.genhashpath(key)
-    path = key.split("/").select { |x| x.length > 0 }.map { |x| "[#{x.inspect}]" }
+    # TODO(sissel): enforce 'key' needs to be a string or symbol?
+    path = key.split("/").select { |x| x.length > 0 }\
+               .map { |x| "[#{x.inspect}]" }
     return "@data#{path.join("")}"
   end
 end # modules BindToHash
 
-module LogStash; module Net
-  PROTOCOL_VERSION = 1
-
+module MQRPC
   class Message
     extend BindToHash
-    attr_accessor :data
 
-    # list of class instances that can identify messages
-    @@translators = Hash.new
+    @@knowntypes = Hash.new
+    attr_accessor :data
 
     # Message attributes
     hashbind :id, "id"
+    hashbind :messageclass, "messageclass"
     hashbind :replyto, "reply-to"
     hashbind :timestamp, "timestamp"
 
@@ -49,36 +47,29 @@ module LogStash; module Net
       @buffer = want_buffer
     end
 
-    # All message subclasses should register themselves here
-    # This will allow Message.new_from_data to automatically return
-    # the correct message instance.
-    def self.translators
-      return @@translators
-    end
+    def self.inherited(subclass)
+      puts "#{subclass.name} is a #{self.name}"
+      @@knowntypes[subclass.name] = subclass
 
-    def self.register
-      name = self.name.split(":")[-1]
-      self.class_eval %(
-        def _name
-          return "#{name}"
-        end
-      )
-      @@translators[name] = self
-    end
+      # Call the class initializer if it has one.
+      if subclass.respond_to?(:class_initialize)
+        subclass.class_initialize
+      end
+    end # def self.inherited
 
     def initialize
       @data = Hash.new
       want_buffer(false)
+      self.messageclass = self.class.name
     end
 
     def self.new_from_data(data)
       obj = nil
-      #@@translators.each do |translator|
-      name = data["type"]
-      if @@translators.has_key?(name)
-        obj = @@translators[name].new
+      name = @data["messageclass"]
+      if @@knowntypes.has_key?(name)
+        obj = @@knowntypes[name].new
       else
-        $stderr.puts "No translator found for #{name} / #{data.inspect}"
+        $stderr.puts "No known message class: #{name}, #{data.inspect}"
         obj = Message.new
       end
       obj.data = data
@@ -89,50 +80,42 @@ module LogStash; module Net
       return @data.to_json(*args)
     end
 
-  protected
+    protected
     attr :data
   end # class Message
 
   class RequestMessage < Message
     @@idseq = 0
+    @@idlock = Mutex.new
 
     def initialize
       super
       self.args = Hash.new
-      self.name = self._name
       generate_id!
     end
 
     def generate_id!
-      @data["id"] = @@idseq
-      @@idseq += 1
+      @idlock.synchronize do
+        self.id = @@idseq
+        @@idseq += 1
+      end
     end
 
-    # Message attributes
-    def name
-      return @data["type"]
-    end
-
-    def name=(val)
-      return @data["type"] = val
-    end
-
-    def args
-      return @data["args"]
-    end
-
-    def args=(val)
-      return @data["args"] = val
-    end
+    hashbind :args, "args"
   end # class RequestMessage
 
-  class ResponseMessage < RequestMessage
-    #Message.translators << self
+  class ResponseMessage < Message
+    def initialze
+      super
+      self.args = Hash.new
+    end
+
+    hashbind :args, "args"
 
     # Report the success of the request this response is for.
-    # Should be implemented by subclasses
+    # Should be implemented by subclasses.
     def success?
       raise NotImplementedError
     end
   end # class ResponseMessage
-end; end # module LogStash::Net
+end # module MQRPC
