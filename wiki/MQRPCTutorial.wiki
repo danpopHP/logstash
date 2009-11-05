@@ -2,6 +2,10 @@
 
 = MQPRC Tutorial =
 
+<wiki:toc max_depth="3" />
+
+= Intro =
+
 Let's start with a RPC example: Summing up numbers.
 
 These examples use the [http://www.rabbitmq.com/examples.html#demo-server RabbitMQ demo server], so you don't need to have an AMQP server running yourself. Though, if you have one already, feel free to change the hosts used in the examples.
