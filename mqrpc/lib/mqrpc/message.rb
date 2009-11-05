@@ -3,8 +3,19 @@ require 'thread'
 require 'mqrpc/logger'
 
 module BindToHash
+  def header(method, key=nil)
+    key = method.to_s if key == nil
+    hashbind(method, "/#{key}")
+  end
+
+  def argument(method, key=nil)
+    key = method.to_s if key == nil
+    hashbind(method, "/args/#{key}")
+  end
+
+  private
   def hashbind(method, key)
-    hashpath = BindToHash.genhashpath(key)
+    hashpath = __genhashpath(key)
     self.class_eval %(
       def #{method}
         return #{hashpath}
@@ -15,7 +26,7 @@ module BindToHash
     )
   end
 
-  def self.genhashpath(key)
+  def __genhashpath(key)
     # TODO(sissel): enforce 'key' needs to be a string or symbol?
     path = key.split("/").select { |x| x.length > 0 }\
                .map { |x| "[#{x.inspect}]" }
@@ -27,14 +38,27 @@ module MQRPC
   class Message
     extend BindToHash
 
+    @@idseq = 0
+    @@idlock = Mutex.new
     @@knowntypes = Hash.new
     attr_accessor :data
 
     # Message attributes
-    hashbind :id, "id"
-    hashbind :messageclass, "messageclass"
-    hashbind :replyto, "reply-to"
-    hashbind :timestamp, "timestamp"
+    header :id
+    header :message_class
+    header :reply_to
+    header :timestamp
+
+    def initialize
+      generate_id!
+    end
+
+    def generate_id!
+      @@idlock.synchronize do
+        self.id = @@idseq
+        @@idseq += 1
+      end
+    end
 
     def age
       return Time.now.to_f - timestamp
@@ -61,12 +85,12 @@ module MQRPC
     def initialize
       @data = Hash.new
       want_buffer(false)
-      self.messageclass = self.class.name
+      self.message_class = self.class.name
     end
 
     def self.new_from_data(data)
       obj = nil
-      name = data["messageclass"]
+      name = data["message_class"]
       if @@knowntypes.has_key?(name)
         obj = @@knowntypes[name].new
       else
@@ -86,32 +110,28 @@ module MQRPC
   end # class Message
 
   class RequestMessage < Message
-    @@idseq = 0
-    @@idlock = Mutex.new
+    header :args
 
     def initialize
       super
       self.args = Hash.new
-      generate_id!
     end
 
-    def generate_id!
-      @@idlock.synchronize do
-        self.id = @@idseq
-        @@idseq += 1
-      end
-    end
-
-    hashbind :args, "args"
   end # class RequestMessage
 
   class ResponseMessage < Message
-    def initialize
-      super
+    header :in_reply_to
+    header :args
+
+    def initialize(source_request=nil)
+      super()
+
+      # Copy the request id if we are given a source_request
+      if source_request.is_a?(RequestMessage)
+        self.in_reply_to = source_request.id
+      end
       self.args = Hash.new
     end
-
-    hashbind :args, "args"
 
     # Report the success of the request this response is for.
     # Should be implemented by subclasses.

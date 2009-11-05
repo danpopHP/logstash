@@ -28,7 +28,7 @@ module MQRPC
   class Agent
     MAXBUF = 20
 
-    def initialize(config, logger)
+    def initialize(config)
       Thread::abort_on_exception = true
       @config = config
       @handler = self
@@ -124,12 +124,15 @@ module MQRPC
         name = message.class.name.split(":")[-1]
         func = "#{name}Handler"
 
-        if @message_operations.has_key?(message.id)
-          operation = @message_operations[message.id]
+        # Check if we have a specific operation looking for this
+        # message.
+        if (message.respond_to?(:in_reply_to) and
+            @message_operations.has_key?(message.in_reply_to))
+          operation = @message_operations[message.in_reply_to]
           operation.call message
         elsif @handler.respond_to?(func) 
           @handler.send(func, message) do |response|
-            reply = message.replyto
+            reply = message.reply_to
             sendmsg(reply, response)
           end
 
@@ -195,7 +198,7 @@ module MQRPC
         msg.generate_id!
       end
       msg.timestamp = Time.now.to_f
-      msg.replyto = @id
+      msg.reply_to = @id
 
       #if (msg.is_a?(RequestMessage) and !msg.is_a?(ResponseMessage))
         #MQRPC::logger.info "Tracking #{msg.class.name}##{msg.id}"
