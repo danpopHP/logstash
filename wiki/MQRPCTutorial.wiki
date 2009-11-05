@@ -1,0 +1,87 @@
+#summary MQRPC Tutorial
+
+= MQPRC Tutorial =
+
+Let's start with a RPC example: Summing up numbers.
+
+You'll need an AMQP server for this. If you don't have one, you can download one. RabbitMQ is pretty easy to get going. If you don't want to set one up, the fine folks at RabbitMQ provide a demo queue server online, see http://www.rabbitmq.com/examples.html#demo-server
+
+== Make your message ==
+
+Messages are generic. For a real RPC system you'll want the function call (a Request) and the function return (a Response).
+
+=== The Add Messages ===
+Here's an example of a "Add" request. For demonstrative purposes, we'll give the request an argument called 'numbers' which will store an array of numbers into. Put the following in a file called 'add_message.rb':
+
+{{{
+require 'mqrpc'
+
+class AddRequest < MQRPC::RequestMessage
+  hashbind :numbers, "/args/numbers"
+end
+
+class AddResponse < MQRPC::ResponseMessage
+  hashbind :sum, "/args/sum"
+end
+}}}
+
+We've now created two messages. 
+
+=== The Server ===
+
+{{{
+require 'mqrpc'
+require 'add_message'
+
+class Adder < MQRPC::Agent
+  def AddRequestHandler(message)
+    puts "Got #{message.class.name} for #{message.numbers.inspect}"
+    sum = message.numbers.reduce { |a,b| a + b }
+    
+    # Make the response
+    response = AddResponse.new
+    response.id = message.id
+    response.sum = sum
+    yield response 
+  end # def AddRequestHandler
+  
+  def run
+    subscribe("adder")
+    super
+  end
+end # class Adder < MQRPC::Agent
+
+config = MQRPC::Config.new({ "mqhost" => "dev.rabbitmq.com" })
+adder = Adder.new(config)
+adder.run
+}}}
+
+=== The Client ===
+
+Now let's create the client.
+
+{{{
+require 'mqrpc'
+require 'add_message'
+
+class AdderClient < MQRPC::Agent
+  def run
+    request = AddRequest.new
+    request.numbers = [10, 20, 30, 40]
+
+    # send our request to the 'adder' queue
+    # and run the given block for the response
+    op = sendmsg("adder", request) do |msg|
+      puts "Got result: #{msg.sum}"
+
+      # Say we're done.
+      close
+    end
+    super
+  end # def
+end # class AdderClient < MQRPC::Agent
+
+config = MQRPC::Config.new({ "mqhost" => "dev.rabbitmq.com" })
+adder = AdderClient.new(config)
+adder.run
+}}}
