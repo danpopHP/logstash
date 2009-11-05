@@ -61,7 +61,7 @@ adder.run
 Now let's create the client.
 
 {{{
-c'
+require 'mqrpc'
 require 'add_message'
 
 class AdderClient < MQRPC::Agent
