@@ -14,4 +14,4 @@ Because we use a message queue for transport, we can:
 
 = Tutorial =
 
-  * MQRPCTutorial
+  * [MQRPCTutorial]
