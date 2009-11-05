@@ -12,10 +12,6 @@ module MQRPC::Messages
   end # class PingRequest < RequestMessage
 
   class PingResponse < MQRPC::ResponseMessage
-    def initialize
-      super
-    end
-
     hashbind :pingdata, "/args/pingdata"
   end
 end
