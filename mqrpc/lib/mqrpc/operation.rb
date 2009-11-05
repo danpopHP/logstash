@@ -20,6 +20,7 @@ module MQRPC
       @mutex.synchronize do
         ret = @callback.call(*args)
         if ret == :finished
+          $logger.info "Operation #{self} finished"
           @finished = true
           @cv.signal
         else
@@ -39,7 +40,7 @@ module MQRPC
       end
     end # def wait_until_finished
 
-    protected:
+    protected
     def finished?
       return @finished
     end # def finished?

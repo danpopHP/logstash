@@ -1,7 +1,5 @@
 require 'rubygems'
 require 'amqp'
-require 'lib/net/messagepacket'
-require 'lib/util'
 require 'mq'
 require 'mqrpc/operation'
 require 'thread'
@@ -30,6 +28,7 @@ module MQRPC
     MAXBUF = 20
 
     def initialize(config, logger)
+      Thread::abort_on_exception = true
       @config, @logger = config, logger
       @handler = self
       @id = UUID::generate
@@ -51,7 +50,7 @@ module MQRPC
       start_amqp
       @startup_mutex.synchronize do
         @logger.debug "Waiting for @mq ..."
-        @startup_cv.wait(@startup_mutex) if !@amqp_ready
+        @startup_condvar.wait(@startup_mutex) if !@amqp_ready
       end
 
       start_receiver
@@ -141,10 +140,6 @@ module MQRPC
         end # if @handler.respond_to?(func)
       end
       hdr.ack
-
-      if @close # set by 'close' method
-        EM.stop_event_loop
-      end
     end # def handle_message
 
     def run
@@ -201,10 +196,10 @@ module MQRPC
       msg.timestamp = Time.now.to_f
       msg.replyto = @id
 
-      if (msg.is_a?(RequestMessage) and !msg.is_a?(ResponseMessage))
-        @logger.info "Tracking #{msg.class.name}##{msg.id}"
+      #if (msg.is_a?(RequestMessage) and !msg.is_a?(ResponseMessage))
+        #@logger.info "Tracking #{msg.class.name}##{msg.id}"
         #@slidingwindow << msg.id
-      end
+      #end
 
       if msg.buffer?
         @outbuffer[destination] << msg
@@ -227,7 +222,7 @@ module MQRPC
     end
 
     def close
-      @close = true
+      EM.stop_event_loop
     end
   end # class Agent
 end # module MQRPC

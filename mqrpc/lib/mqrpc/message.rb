@@ -65,7 +65,7 @@ module MQRPC
 
     def self.new_from_data(data)
       obj = nil
-      name = @data["messageclass"]
+      name = data["messageclass"]
       if @@knowntypes.has_key?(name)
         obj = @@knowntypes[name].new
       else
@@ -95,7 +95,7 @@ module MQRPC
     end
 
     def generate_id!
-      @idlock.synchronize do
+      @@idlock.synchronize do
         self.id = @@idseq
         @@idseq += 1
       end
@@ -105,7 +105,7 @@ module MQRPC
   end # class RequestMessage
 
   class ResponseMessage < Message
-    def initialze
+    def initialize
       super
       self.args = Hash.new
     end
