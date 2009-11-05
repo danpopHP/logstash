@@ -95,3 +95,73 @@ adder.run
 % ruby add_server.rb                   |    % ruby add_client.rb
 Got AddRequest for [10, 20, 30, 40]    |    Got result: 100
 }}}
+
+== Multiple asynchronous messages - Adder Client ==
+
+What if you want to send a bunch of requests in parallel? The agent's sendmsg function, if given a block, will return a MQRPC::Operation object which you can use to synchronously wait on. If you store a bunch of these, then wait all at once, you get parallelism.
+
+{{{
+require 'mqrpc'
+require 'add_message'
+
+class AdderClient < MQRPC::Agent
+  def run
+    Thread.new { myrunner }
+    super
+  end # def
+
+  def myrunner
+    operations = []
+    0.upto(20) do |i|
+      request = AddRequest.new
+      request.numbers = [rand, rand, rand, rand]
+      op = sendmsg("adder", request) do |msg|
+        puts "Got result: #{msg.sum}"
+      end
+      operations << op
+    end
+
+    # Now that we've fired all the operations, wait for them all
+    # to finish.
+    puts "Waiting on all operations..."
+    operations.each do |op|
+      op.wait_until_finished
+    end
+
+    # Close up.
+    close
+  end
+end # class AdderClient < MQRPC::Agent
+
+config = MQRPC::Config.new({ "mqhost" => "dev.rabbitmq.com" })
+adder = AdderClient.new(config)
+adder.run
+}}}
+
+=== Multimessage adder output ===
+
+{{{
+% ruby add_client_multirequest.rb
+Waiting on all operations...
+Got result: 2.62770229058272
+Got result: 1.09610144196618
+Got result: 2.0294984932482
+Got result: 1.95208399584649
+Got result: 2.24899496968425
+Got result: 1.63678501613125
+Got result: 2.83627181546618
+Got result: 1.28504326542031
+Got result: 2.46139400655061
+Got result: 1.6891112999231
+Got result: 1.77054311419554
+Got result: 1.29082175770879
+Got result: 2.0580156627521
+Got result: 2.00039160891542
+Got result: 2.46367543583985
+Got result: 1.80061435828529
+Got result: 2.04349472371222
+Got result: 2.45506359906596
+Got result: 2.21414242920973
+Got result: 1.84999467133767
+Got result: 1.69721803551371
+}}}
