@@ -11,12 +11,15 @@ AMQP gives us lots of things without having to reinvent them:
   * message persistence outside of the client
   * broadcast messages
   * message acking
+  * round robin / load balancing
 
 It's also easy to proxy emssages from one message broker to another, allowing for easy funneling of message from client to broker to broker to server, through firewalls, without too much mess or network topology changes.
 
   * Message Acknowledgement. We want messages to be consumed and removed only when they have been processed with reasonable success. If one of our processes reads a message and dies before responding, that message stays in the queue.
 
   * Broadcast. Because we want to scale to many indexers, parsers, and agents, we need some way to query for a what is available. AMQP broadcasts (topics) are an excellent way to do . Broadcasting on the network layer, instead of over AMQP, would only stay on the local network or require multicast routing, both of which are inconvenient or impossible depending on who runs your network and where your systems live.
+
+  * Round Robin / Load Balancing. If you have N subscribers to a queue, each message goegs to only one subscriber. This means we can have N log parsers all listening to the same queue to parse logs, all sharing the input load. This lets us both scale horizontally and support single nodes dropping out unexpectedly.
 
 == Why not Thrift? ==
 
