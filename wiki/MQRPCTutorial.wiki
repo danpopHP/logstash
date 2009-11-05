@@ -4,7 +4,7 @@
 
 Let's start with a RPC example: Summing up numbers.
 
-You'll need an AMQP server for this. If you don't have one, you can download one. RabbitMQ is pretty easy to get going. If you don't want to set one up, the fine folks at RabbitMQ provide a demo queue server online, see http://www.rabbitmq.com/examples.html#demo-server
+These examples use the [http://www.rabbitmq.com/examples.html#demo-server RabbitMQ demo server], so you don't need to have an AMQP server running yourself. Though, if you have one already, feel free to change the hosts used in the examples.
 
 == Make your message ==
 
