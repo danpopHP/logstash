@@ -23,6 +23,8 @@ Thrift gets us none of the above, requiring us to implement them all. More code 
 
 Thrift also doesn't support streaming, so if we wanted to split a large response into multiple messages (to provide responsive search experience), we'd have to implement that ourselves.
 
+
+
 = Message Encoding =
 
 == Why JSON? ==
