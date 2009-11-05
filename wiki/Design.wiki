@@ -69,3 +69,7 @@ The indexer serves two purposes: indexing already-parsed log lines and searching
 == Search Web Interface ==
 
 A small web interface (more proof of concept than anything) that provides an interface to searching. The query language is FQL (Ferret Query Language, see [QueryLanguage]). The output is always sorted by date (using the `@DATE` meta-data). There is also a command-line interface for log searching.
+
+= Network Design =
+
+See NetowrkDesign
