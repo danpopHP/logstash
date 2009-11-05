@@ -38,6 +38,9 @@ require 'mqrpc'
 require 'add_message'
 
 class Adder < MQRPC::Agent
+
+  # Defining '<thing>Handler' autoregisters your class's support for that message
+  # So having the method below means we can handle AddRequest messages.
   def AddRequestHandler(request)
     puts "Got #{request.class.name} for #{request.numbers.inspect}"
     # The 'request.numbers' method comes from our declaration above
