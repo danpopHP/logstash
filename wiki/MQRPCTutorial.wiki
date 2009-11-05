@@ -10,6 +10,8 @@ Let's start with a RPC example: Summing up numbers.
 
 These examples use the [http://www.rabbitmq.com/examples.html#demo-server RabbitMQ demo server], so you don't need to have an AMQP server running yourself. Though, if you have one already, feel free to change the hosts used in the examples.
 
+You'll need mqrpc: https://rubyforge.org/frs/download.php/66667/mqrpc-0.0.1.gem
+
 == Make your message ==
 
 Messages are generic. For a real RPC system you'll want the function call (a Request) and the function return (a Response).
