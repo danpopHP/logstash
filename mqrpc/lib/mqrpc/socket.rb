@@ -26,36 +26,38 @@ end
 
 module MQRPC
   # TODO: document this class
-  class MessageSocket
+  class Agent
     MAXBUF = 20
 
     def initialize(config, logger)
-      @id = UUID::generate
       @config, @logger = config, logger
-      @want_queues = []
-      @queues = []
-      @want_topics = []
-      @topics = []
       @handler = self
-      @receive_queue = Queue.new
+      @id = UUID::generate
       @outbuffer = Hash.new { |h,k| h[k] = [] }
+      @queues = []
+      @receive_queue = Queue.new
+      @topics = []
+      @want_queues = []
+      @want_topics = []
       #@slidingwindow = LogStash::SlidingWindowSet.new
+
       @mq = nil
       @message_operations = Hash.new
-      @startuplock = Mutex.new
 
-      @mutex = Mutex.new
-      @cv = ConditionVariable.new
-      start_amqp(@mutex, @cv)
-      @mutex.synchronize do
+      @startup_mutex = Mutex.new
+      @startup_condvar = ConditionVariable.new
+      @amqp_ready = false
+
+      start_amqp
+      @startup_mutex.synchronize do
         @logger.debug "Waiting for @mq ..."
-        @cv.wait(@mutex)
+        @startup_cv.wait(@startup_mutex) if !@amqp_ready
       end
 
       start_receiver
     end # def initialize
 
-    def start_amqp(mutex, condvar)
+    def start_amqp
       @amqpthread = Thread.new do 
         # Create connection to AMQP, and in turn, the main EventMachine loop.
         amqp_config = {:host => @config.mqhost,
@@ -65,21 +67,24 @@ module MQRPC
                        :vhost => @config.mqvhost,
                       }
         AMQP.start(amqp_config) do
-          mutex.synchronize do
+          @startup_mutex.synchronize do
             @mq = MQ.new
             # Notify the main calling thread (MessageSocket#initialize) that
             # we can continue
-            condvar.signal
+            @amqp_ready = true
+            @startup_condvar.signal
           end
 
           @logger.info "Subscribing to main queue #{@id}"
           mq_q = @mq.queue(@id, :auto_delete => true)
-          #mq_q.subscribe(:ack =>true) { |hdr, msg| handle_message(hdr, msg) }
           mq_q.subscribe(:ack =>true) { |hdr, msg| @receive_queue << [hdr, msg] }
           handle_new_subscriptions
           
+          # TODO(sissel): make this a deferred thread that reads from a Queue
           EM.add_periodic_timer(5) { handle_new_subscriptions }
+
           EM.add_periodic_timer(1) do
+            # TODO(sissel): add locking
             @outbuffer.each_key { |dest| flushout(dest) }
             @outbuffer.clear
           end
@@ -224,5 +229,5 @@ module MQRPC
     def close
       @close = true
     end
-  end # class MessageSocket
+  end # class Agent
 end # module MQRPC
