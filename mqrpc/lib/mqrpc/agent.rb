@@ -1,6 +1,7 @@
 require 'rubygems'
 require 'amqp'
 require 'mq'
+require 'mqrpc/logger'
 require 'mqrpc/operation'
 require 'thread'
 require 'uuid'
@@ -29,7 +30,7 @@ module MQRPC
 
     def initialize(config, logger)
       Thread::abort_on_exception = true
-      @config, @logger = config, logger
+      @config = config
       @handler = self
       @id = UUID::generate
       @outbuffer = Hash.new { |h,k| h[k] = [] }
@@ -49,7 +50,7 @@ module MQRPC
 
       start_amqp
       @startup_mutex.synchronize do
-        @logger.debug "Waiting for @mq ..."
+        MQRPC::logger.debug "Waiting for @mq ..."
         @startup_condvar.wait(@startup_mutex) if !@amqp_ready
       end
 
@@ -74,7 +75,7 @@ module MQRPC
             @startup_condvar.signal
           end
 
-          @logger.info "Subscribing to main queue #{@id}"
+          MQRPC::logger.info "Subscribing to main queue #{@id}"
           mq_q = @mq.queue(@id, :auto_delete => true)
           mq_q.subscribe(:ack =>true) { |hdr, msg| @receive_queue << [hdr, msg] }
           handle_new_subscriptions
@@ -149,7 +150,7 @@ module MQRPC
     def handle_new_subscriptions
       todo = @want_queues - @queues
       todo.each do |queue|
-        @logger.info "Subscribing to queue #{queue}"
+        MQRPC::logger.info "Subscribing to queue #{queue}"
         mq_q = @mq.queue(queue, :durable => true)
         mq_q.subscribe(:ack => true) { |hdr, msg| @receive_queue << [hdr, msg] }
         @queues << queue
@@ -157,7 +158,7 @@ module MQRPC
 
       todo = @want_topics - @topics
       todo.each do |topic|
-        @logger.info "Subscribing to topic #{topic}"
+        MQRPC::logger.info "Subscribing to topic #{topic}"
         exchange = @mq.topic("amq.topic")
         mq_q = @mq.queue("#{@id}-#{topic}",
                          :exclusive => true,
@@ -197,7 +198,7 @@ module MQRPC
       msg.replyto = @id
 
       #if (msg.is_a?(RequestMessage) and !msg.is_a?(ResponseMessage))
-        #@logger.info "Tracking #{msg.class.name}##{msg.id}"
+        #MQRPC::logger.info "Tracking #{msg.class.name}##{msg.id}"
         #@slidingwindow << msg.id
       #end
 

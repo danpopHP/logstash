@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'thread'
+require 'mqrpc/logger'
 
 module MQRPC
   # A single message operation
@@ -15,12 +16,12 @@ module MQRPC
     end # def initialize
 
     def call(*args)
-      # TODO(sissel): allow the callback to simply invoke 'finished' on this operation
-      # rather than requiring it to emit ':finished'
+      # TODO(sissel): allow the callback to simply invoke 'finished' on this
+      # operation rather than requiring it to emit ':finished'
       @mutex.synchronize do
         ret = @callback.call(*args)
         if ret == :finished
-          $logger.info "Operation #{self} finished"
+          MQRPC::logger.debug "operation #{self} finished"
           @finished = true
           @cv.signal
         else

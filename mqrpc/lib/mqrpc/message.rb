@@ -1,5 +1,6 @@
 require 'json'
 require 'thread'
+require 'mqrpc/logger'
 
 module BindToHash
   def hashbind(method, key)
@@ -48,7 +49,7 @@ module MQRPC
     end
 
     def self.inherited(subclass)
-      puts "#{subclass.name} is a #{self.name}"
+      MQRPC::logger.debug "Message '#{subclass.name}' subclasses #{self.name}"
       @@knowntypes[subclass.name] = subclass
 
       # Call the class initializer if it has one.
