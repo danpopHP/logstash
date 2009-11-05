@@ -3,8 +3,9 @@ require 'amqp'
 require 'lib/net/messagepacket'
 require 'lib/util'
 require 'mq'
-require 'uuid'
+require 'mqrpc/operation'
 require 'thread'
+require 'uuid'
 
 # http://github.com/tmm1/amqp/issues/#issue/3
 # This is our (lame) hack to at least notify the user that something is
@@ -23,43 +24,7 @@ module AMQP
   end
 end
 
-module LogStash; module Net
-
-  # A single message operation
-  # * Takes a callback to call when a message is received
-  # * Allows you to wait for the operation to complete.
-  # * An operation is 'complete' when the callback returns :finished
-  class Operation
-    def initialize(callback)
-      @mutex = Mutex.new
-      @callback = callback
-      @cv = ConditionVariable.new
-      @finished = false
-    end # def initialize
-
-    def call(*args)
-      @mutex.synchronize do
-        ret = @callback.call(*args)
-        if ret == :finished
-          @finished = true
-          @cv.signal
-        else
-          return ret
-        end
-      end
-    end # def call
-
-    def wait_until_finished
-      @mutex.synchronize do
-        @cv.wait(@mutex) if !finished?
-      end
-    end # def wait_until_finished
-
-    def finished?
-      return @finished
-    end
-  end # def Operation
-
+module MQRPC
   # TODO: document this class
   class MessageSocket
     MAXBUF = 20
@@ -260,4 +225,4 @@ module LogStash; module Net
       @close = true
     end
   end # class MessageSocket
-end; end # module LogStash::Net
+end # module MQRPC
