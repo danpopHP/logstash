@@ -27,8 +27,8 @@ end
 module MQRPC
   # TODO: document this class
   class Agent
-    MAXBUF = 1
-    MAXMESSAGEWAIT = 1
+    MAXBUF = 20
+    MAXMESSAGEWAIT = MAXBUF * 20
 
     def initialize(config)
       Thread::abort_on_exception = true
@@ -131,11 +131,11 @@ module MQRPC
         if message.respond_to?(:from_queue)
           slidingwindow = @slidingwindow[message.from_queue]
         end
-        MQRPC::logger.debug "Got message #{message.class}##{message.id} on queue #{queue}"
+        MQRPC::logger.debug "#{Thread.current} Got message #{message.class}##{message.id} on queue #{queue}"
         MQRPC::logger.debug "Received message: #{message.inspect}"
         if (message.respond_to?(:in_reply_to) and 
             slidingwindow.include?(message.in_reply_to))
-          MQRPC::logger.info "Got response to #{message.in_reply_to}"
+          MQRPC::logger.debug "Got response to #{message.in_reply_to}"
           slidingwindow.delete(message.in_reply_to)
         end
         name = message.class.name.split(":")[-1]
@@ -247,7 +247,7 @@ module MQRPC
           flushout(destination)
         end
       else
-        MQRPC::logger.debug "Sending to #{destination}: #{msg.inspect}"
+        MQRPC::logger.debug "#{Thread.current} Sending to #{destination}: #{msg.inspect}"
         @mq.queue(destination, :durable => true).publish([msg].to_json, :persistent => true)
       end
 
