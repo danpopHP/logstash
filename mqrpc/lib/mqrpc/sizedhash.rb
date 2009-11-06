@@ -18,6 +18,7 @@ class SizedThreadSafeHash
       # If adding a new item, wait if the hash is full
       if !@data.has_key?(key) and _withlock_full?
         MQRPC::logger.info "#{self}: Waiting to add key #{key.inspect}, hash is full"
+        MQRPC::logger.info "#{self}: Keys: #{@data.keys.inspect}"
         #pp @data
         @condvar.wait(@lock)
       end
