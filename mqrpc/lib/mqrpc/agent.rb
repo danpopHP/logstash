@@ -27,8 +27,8 @@ end
 module MQRPC
   # TODO: document this class
   class Agent
-    MAXBUF = 20
-    MAXMESSAGEWAIT = 5 * MAXBUF
+    MAXBUF = 1
+    MAXMESSAGEWAIT = 1
 
     def initialize(config)
       Thread::abort_on_exception = true
@@ -247,6 +247,7 @@ module MQRPC
           flushout(destination)
         end
       else
+        MQRPC::logger.debug "Sending to #{destination}: #{msg.inspect}"
         @mq.queue(destination, :durable => true).publish([msg].to_json, :persistent => true)
       end
 

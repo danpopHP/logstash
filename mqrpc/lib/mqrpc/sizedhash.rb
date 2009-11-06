@@ -1,5 +1,5 @@
 require 'thread'
-#require 'pp'
+require 'mqrpc'
 
 # Thread-safe sized hash similar to SizedQueue.
 # The only time we will block execution is in setting new items.
@@ -17,7 +17,7 @@ class SizedThreadSafeHash
     @lock.synchronize do
       # If adding a new item, wait if the hash is full
       if !@data.has_key?(key) and _withlock_full?
-        puts "Waiting to add key #{key.inspect}, hash is full"
+        MQRPC::logger.info "#{self}: Waiting to add key #{key.inspect}, hash is full"
         #pp @data
         @condvar.wait(@lock)
       end
@@ -44,9 +44,12 @@ class SizedThreadSafeHash
   # delete a key
   def delete(key)
     @lock.synchronize do
-      puts "Removing key #{key.inspect}"
+      was_full = _withlock_full?
       @data.delete(key)
-      @condvar.signal
+      if was_full
+        MQRPC::logger.info "#{self}: signalling non-fullness"
+        @condvar.signal
+      end
     end
   end # def delete
 
@@ -74,7 +77,7 @@ class SizedThreadSafeHash
 
   private
   def _withlock_full?
-    return @data.size == @size
+    return @data.size >= @size
   end
 end # class SizedThreadSafeHash
 
