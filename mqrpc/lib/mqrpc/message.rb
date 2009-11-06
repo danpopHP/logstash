@@ -26,6 +26,7 @@ module BindToHash
     )
   end
 
+  private
   def __genhashpath(key)
     # TODO(sissel): enforce 'key' needs to be a string or symbol?
     path = key.split("/").select { |x| x.length > 0 }\
@@ -49,13 +50,40 @@ module MQRPC
     header :reply_to
     header :timestamp
 
+    def self.inherited(subclass)
+      MQRPC::logger.debug "Message '#{subclass.name}' subclasses #{self.name}"
+      @@knowntypes[subclass.name] = subclass
+
+      # Call the class initializer if it has one.
+      if subclass.respond_to?(:class_initialize)
+        subclass.class_initialize
+      end
+    end # def self.inherited
+
+    def self.new_from_data(data)
+      obj = nil
+      name = data["message_class"]
+      if @@knowntypes.has_key?(name)
+        obj = @@knowntypes[name].new
+      else
+        $stderr.puts "No known message class: #{name}, #{data.inspect}"
+        obj = Message.new
+      end
+      obj.data = data
+      return obj
+    end
+
     def initialize
+      @data = Hash.new
+      want_buffer(false)
+      self.message_class = self.class.name
       generate_id!
     end
 
     def generate_id!
       @@idlock.synchronize do
         self.id = @@idseq
+        #puts "Generating id. #{self.class}.id == #{self.id}"
         @@idseq += 1
       end
     end
@@ -70,35 +98,6 @@ module MQRPC
 
     def want_buffer(want_buffer=true)
       @buffer = want_buffer
-    end
-
-    def self.inherited(subclass)
-      MQRPC::logger.debug "Message '#{subclass.name}' subclasses #{self.name}"
-      @@knowntypes[subclass.name] = subclass
-
-      # Call the class initializer if it has one.
-      if subclass.respond_to?(:class_initialize)
-        subclass.class_initialize
-      end
-    end # def self.inherited
-
-    def initialize
-      @data = Hash.new
-      want_buffer(false)
-      self.message_class = self.class.name
-    end
-
-    def self.new_from_data(data)
-      obj = nil
-      name = data["message_class"]
-      if @@knowntypes.has_key?(name)
-        obj = @@knowntypes[name].new
-      else
-        $stderr.puts "No known message class: #{name}, #{data.inspect}"
-        obj = Message.new
-      end
-      obj.data = data
-      return obj
     end
 
     def to_json(*args)
@@ -121,6 +120,7 @@ module MQRPC
 
   class ResponseMessage < Message
     header :in_reply_to
+    header :from_queue
     header :args
 
     def initialize(source_request=nil)

@@ -1,4 +1,5 @@
 require 'thread'
+#require 'pp'
 
 # Thread-safe sized hash similar to SizedQueue.
 # The only time we will block execution is in setting new items.
@@ -16,6 +17,8 @@ class SizedThreadSafeHash
     @lock.synchronize do
       # If adding a new item, wait if the hash is full
       if !@data.has_key?(key) and _withlock_full?
+        puts "Waiting to add key #{key.inspect}, hash is full"
+        #pp @data
         @condvar.wait(@lock)
       end
       @data[key] = value
@@ -29,9 +32,19 @@ class SizedThreadSafeHash
     end
   end # def []
 
+  # boolean, does the hash have a given key?
+  def has_key?(key)
+    @lock.synchronize do
+      return @data.has_key?(key)
+    end
+  end # def has_key?
+
+  alias :include? :has_key?
+
   # delete a key
   def delete(key)
     @lock.synchronize do
+      puts "Removing key #{key.inspect}"
       @data.delete(key)
       @condvar.signal
     end

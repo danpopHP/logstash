@@ -16,17 +16,16 @@ module MQRPC
     end # def initialize
 
     def call(*args)
-      # TODO(sissel): allow the callback to simply invoke 'finished' on this
-      # operation rather than requiring it to emit ':finished'
+      # TODO(sissel): Come up with a better way for the callback to declare
+      # that it is not done than simply returning ':continue'
       @mutex.synchronize do
         ret = @callback.call(*args)
-        if ret == :finished
-          MQRPC::logger.debug "operation #{self} finished"
+        if ret != :continue
+          #MQRPC::logger.debug "operation #{self} finished"
           @finished = true
           @cv.signal
-        else
-          return ret
         end
+        return ret
       end
     end # def call
 

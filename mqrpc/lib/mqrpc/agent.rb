@@ -3,6 +3,7 @@ require 'amqp'
 require 'mq'
 require 'mqrpc/logger'
 require 'mqrpc/operation'
+require 'mqrpc/sizedhash'
 require 'thread'
 require 'uuid'
 
@@ -27,6 +28,7 @@ module MQRPC
   # TODO: document this class
   class Agent
     MAXBUF = 20
+    MAXMESSAGEWAIT = 5 * MAXBUF
 
     def initialize(config)
       Thread::abort_on_exception = true
@@ -35,11 +37,13 @@ module MQRPC
       @id = UUID::generate
       @outbuffer = Hash.new { |h,k| h[k] = [] }
       @queues = []
-      @receive_queue = Queue.new
       @topics = []
-      @want_queues = []
-      @want_topics = []
-      #@slidingwindow = LogStash::SlidingWindowSet.new
+      @receive_queue = Queue.new
+      @want_subscriptions = Queue.new
+      @slidingwindow = Hash.new do |h,k| 
+        MQRPC::logger.info "New sliding window for #{k}"
+        h[k] = SizedThreadSafeHash.new(MAXMESSAGEWAIT) 
+      end
 
       @mq = nil
       @message_operations = Hash.new
@@ -49,9 +53,13 @@ module MQRPC
       @amqp_ready = false
 
       start_amqp
+
+      # Wait for our AMQP thread to get going. Mainly, it needs to set
+      # @mq, so we'll block until it's available.
       @startup_mutex.synchronize do
         MQRPC::logger.debug "Waiting for @mq ..."
         @startup_condvar.wait(@startup_mutex) if !@amqp_ready
+        MQRPC::logger.debug "Got it, continuing with #{self.class} init..."
       end
 
       start_receiver
@@ -78,10 +86,11 @@ module MQRPC
           MQRPC::logger.info "Subscribing to main queue #{@id}"
           mq_q = @mq.queue(@id, :auto_delete => true)
           mq_q.subscribe(:ack =>true) { |hdr, msg| @receive_queue << [hdr, msg] }
-          handle_new_subscriptions
+          #handle_new_subscriptions
           
           # TODO(sissel): make this a deferred thread that reads from a Queue
-          EM.add_periodic_timer(5) { handle_new_subscriptions }
+          #EM.add_periodic_timer(5) { handle_new_subscriptions }
+          EM.defer { handle_subscriptions }
 
           EM.add_periodic_timer(1) do
             # TODO(sissel): add locking
@@ -102,11 +111,11 @@ module MQRPC
     end # def start_receiver
 
     def subscribe(name)
-      @want_queues << name 
+      @want_subscriptions << [:queue, name]
     end # def subscribe
 
     def subscribe_topic(name)
-      @want_topics << name 
+      @want_subscriptions << [:topic, name]
     end # def subscribe_topic
 
     def handle_message(hdr, msg_body)
@@ -115,12 +124,20 @@ module MQRPC
         obj = [obj]
       end
 
+      queue = hdr.routing_key
       obj.each do |item|
         message = Message.new_from_data(item)
-        #if @slidingwindow.include?(message.id)
-          #puts "Removing ack for #{message.id}"
-          #@slidingwindow.delete(message.id)
-        #end
+        slidingwindow = @slidingwindow[queue]
+        if message.respond_to?(:from_queue)
+          slidingwindow = @slidingwindow[message.from_queue]
+        end
+        #MQRPC::logger.debug "Received message: #{message.inspect}"
+        #MQRPC::logger.debug "Got message #{message.class} on queue #{queue}"
+        if (message.respond_to?(:in_reply_to) and 
+            slidingwindow.include?(message.in_reply_to))
+          MQRPC::logger.info "Got response to #{message.in_reply_to}"
+          slidingwindow.delete(message.in_reply_to)
+        end
         name = message.class.name.split(":")[-1]
         func = "#{name}Handler"
 
@@ -129,11 +146,12 @@ module MQRPC
         if (message.respond_to?(:in_reply_to) and
             @message_operations.has_key?(message.in_reply_to))
           operation = @message_operations[message.in_reply_to]
-          operation.call message
+          operation.call(message)
         elsif @handler.respond_to?(func) 
           @handler.send(func, message) do |response|
-            reply = message.reply_to
-            sendmsg(reply, response)
+            reply_destination = message.reply_to
+            response.from_queue = queue
+            sendmsg(reply_destination, response)
           end
 
           # We should allow the message handler to defer acking if they want
@@ -150,6 +168,28 @@ module MQRPC
       @amqpthread.join
     end # run
 
+    def handle_subscriptions
+      while true do
+        type, name = @want_subscriptions.pop
+        case type
+        when :queue
+          next if @queues.include?(name)
+          MQRPC::logger.info "Subscribing to queue #{name}"
+          mq_q = @mq.queue(name, :durable => true)
+          mq_q.subscribe(:ack => true) { |hdr, msg| @receive_queue << [hdr, msg] }
+          @queues << name
+        when :topic
+          MQRPC::logger.info "Subscribing to topic #{name}"
+          exchange = @mq.topic(@config.mqexchange)
+          mq_q = @mq.queue("#{@id}-#{name}",
+                           :exclusive => true,
+                           :auto_delete => true).bind(exchange, :key => name)
+          mq_q.subscribe { |hdr, msg| @receive_queue << [hdr, msg] }
+          @topics << name
+        end
+      end
+    end
+
     def handle_new_subscriptions
       todo = @want_queues - @queues
       todo.each do |queue|
@@ -162,7 +202,7 @@ module MQRPC
       todo = @want_topics - @topics
       todo.each do |topic|
         MQRPC::logger.info "Subscribing to topic #{topic}"
-        exchange = @mq.topic("amq.topic")
+        exchange = @mq.topic(@config.mqexchange)
         mq_q = @mq.queue("#{@id}-#{topic}",
                          :exclusive => true,
                          :auto_delete => true).bind(exchange, :key => topic)
@@ -172,8 +212,6 @@ module MQRPC
     end # handle_new_subscriptions
 
     def flushout(destination)
-      return unless @mq    # wait until we are connected
-
       msgs = @outbuffer[destination]
       return if msgs.length == 0
       data = msgs.to_json
@@ -182,28 +220,26 @@ module MQRPC
     end
 
     def sendmsg_topic(key, msg)
-      return unless @mq    # wait until we are connected
       if (msg.is_a?(RequestMessage) and msg.id == nil)
         msg.generate_id!
       end
       msg.timestamp = Time.now.to_f
 
       data = msg.to_json
-      @mq.topic("amq.topic").publish(data, :key => key)
+      @mq.topic(@config.mqexchange).publish(data, :key => key)
     end
 
     def sendmsg(destination, msg, &callback)
-      return unless @mq    # wait until we are connected
       if (msg.is_a?(RequestMessage) and msg.id == nil)
         msg.generate_id!
       end
       msg.timestamp = Time.now.to_f
       msg.reply_to = @id
 
-      #if (msg.is_a?(RequestMessage) and !msg.is_a?(ResponseMessage))
-        #MQRPC::logger.info "Tracking #{msg.class.name}##{msg.id}"
-        #@slidingwindow << msg.id
-      #end
+      if msg.is_a?(RequestMessage)
+        MQRPC::logger.info "Tracking #{msg.class.name}##{msg.id} to #{destination}"
+        @slidingwindow[destination][msg.id] = true
+      end
 
       if msg.buffer?
         @outbuffer[destination] << msg
