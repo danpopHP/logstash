@@ -1,3 +1,4 @@
+require 'rubygems'
 require 'mqrpc'
 require 'add_message'
 
@@ -18,6 +19,6 @@ class AdderClient < MQRPC::Agent
   end # def
 end # class AdderClient < MQRPC::Agent
 
-config = MQRPC::Config.new({ "mqhost" => "dev.rabbitmq.com" })
+config = MQRPC::Config.new({ "mqhost" => "localhost" })
 adder = AdderClient.new(config)
 adder.run
