@@ -49,7 +49,7 @@ module MQRPC
     header :message_class
     header :reply_to
     header :timestamp
-
+    header :args
     def self.inherited(subclass)
       MQRPC::logger.debug "Message '#{subclass.name}' subclasses #{self.name}"
       @@knowntypes[subclass.name] = subclass
@@ -76,8 +76,10 @@ module MQRPC
     def initialize
       @data = Hash.new
       want_buffer(false)
-      self.message_class = self.class.name
+
       generate_id!
+      self.message_class = self.class.name
+      self.args = Hash.new
     end
 
     def generate_id!
@@ -109,19 +111,12 @@ module MQRPC
   end # class Message
 
   class RequestMessage < Message
-    header :args
-
-    def initialize
-      super
-      self.args = Hash.new
-    end
-
+    # Nothing.
   end # class RequestMessage
 
   class ResponseMessage < Message
     header :in_reply_to
     header :from_queue
-    header :args
 
     def initialize(source_request=nil)
       super()

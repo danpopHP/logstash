@@ -1,5 +1,5 @@
 require 'rubygems'
-require 'lib/mqrpc'
+require 'mqrpc'
 
 module MQRPC::Messages
   class PingRequest < MQRPC::RequestMessage

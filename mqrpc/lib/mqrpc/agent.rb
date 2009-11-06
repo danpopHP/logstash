@@ -131,8 +131,8 @@ module MQRPC
         if message.respond_to?(:from_queue)
           slidingwindow = @slidingwindow[message.from_queue]
         end
-        #MQRPC::logger.debug "Received message: #{message.inspect}"
-        #MQRPC::logger.debug "Got message #{message.class} on queue #{queue}"
+        MQRPC::logger.debug "Got message #{message.class}##{message.id} on queue #{queue}"
+        MQRPC::logger.debug "Received message: #{message.inspect}"
         if (message.respond_to?(:in_reply_to) and 
             slidingwindow.include?(message.in_reply_to))
           MQRPC::logger.info "Got response to #{message.in_reply_to}"
@@ -237,7 +237,7 @@ module MQRPC
       msg.reply_to = @id
 
       if msg.is_a?(RequestMessage)
-        MQRPC::logger.info "Tracking #{msg.class.name}##{msg.id} to #{destination}"
+        MQRPC::logger.debug "Tracking #{msg.class.name}##{msg.id} to #{destination}"
         @slidingwindow[destination][msg.id] = true
       end
 
