@@ -241,7 +241,7 @@ module MQRPC
         @slidingwindow[destination][msg.id] = true
       end
 
-      if msg.buffer?
+      if msg.delayable
         @outbuffer[destination] << msg
         if @outbuffer[destination].length > MAXBUF
           flushout(destination)

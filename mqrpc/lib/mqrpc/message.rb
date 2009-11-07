@@ -38,7 +38,6 @@ end # modules BindToHash
 module MQRPC
   class Message
     extend BindToHash
-
     @@idseq = 0
     @@idlock = Mutex.new
     @@knowntypes = Hash.new
@@ -47,9 +46,11 @@ module MQRPC
     # Message attributes
     header :id
     header :message_class
+    header :delayable
     header :reply_to
     header :timestamp
     header :args
+
     def self.inherited(subclass)
       MQRPC::logger.debug "Message '#{subclass.name}' subclasses #{self.name}"
       @@knowntypes[subclass.name] = subclass
@@ -75,7 +76,8 @@ module MQRPC
 
     def initialize
       @data = Hash.new
-      want_buffer(false)
+      # Don't delay messages by defualt
+      self.delayable = false
 
       generate_id!
       self.message_class = self.class.name
@@ -92,14 +94,6 @@ module MQRPC
 
     def age
       return Time.now.to_f - timestamp
-    end
-
-    def buffer?
-      return @buffer
-    end
-
-    def want_buffer(want_buffer=true)
-      @buffer = want_buffer
     end
 
     def to_json(*args)
@@ -124,6 +118,7 @@ module MQRPC
       # Copy the request id if we are given a source_request
       if source_request.is_a?(RequestMessage)
         self.in_reply_to = source_request.id
+        self.delayable = source_request.delayable
       end
       self.args = Hash.new
     end
