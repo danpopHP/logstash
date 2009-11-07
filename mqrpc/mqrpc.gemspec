@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   end
 
   spec.name = "mqrpc"
-  spec.version = "0.0.2"
+  spec.version = "0.0.3"
   spec.summary = "mqrpc - RPC over Message Queue (AMQP)"
   spec.description = "RPC mechanism using AMQP as the transport"
   spec.add_dependency("amqp", ">= 0.6.0")
