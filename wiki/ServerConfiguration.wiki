@@ -34,6 +34,7 @@ Install the following gems (`gem install foo`):
   * ferret
   * file-tail
   * merb (only if you are using the web interface)
+  * mqrpc
   * uuid
 
 === LogStash RPMs ===
