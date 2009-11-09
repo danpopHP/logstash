@@ -30,6 +30,19 @@ module MQRPC
     MAXBUF = 20
     MAXMESSAGEWAIT = MAXBUF * 20
 
+    class << self
+      attr_accessor :message_handlers
+    end
+
+    # Subclasses use this to declare their support of
+    # any given message
+    def self.handle(messageclass, &block)
+      if self.message_handlers == nil
+        self.message_handlers = Hash.new
+      end
+      self.message_handlers[messageclass] = block
+    end
+
     def initialize(config)
       Thread::abort_on_exception = true
       @config = config
@@ -41,7 +54,7 @@ module MQRPC
       @receive_queue = Queue.new
       @want_subscriptions = Queue.new
       @slidingwindow = Hash.new do |h,k| 
-        MQRPC::logger.info "New sliding window for #{k}"
+        MQRPC::logger.debug "New sliding window for #{k}"
         h[k] = SizedThreadSafeHash.new(MAXMESSAGEWAIT) 
       end
 
@@ -138,8 +151,6 @@ module MQRPC
           MQRPC::logger.debug "Got response to #{message.in_reply_to}"
           slidingwindow.delete(message.in_reply_to)
         end
-        name = message.class.name.split(":")[-1]
-        func = "#{name}Handler"
 
         # Check if we have a specific operation looking for this
         # message.
@@ -147,19 +158,23 @@ module MQRPC
             @message_operations.has_key?(message.in_reply_to))
           operation = @message_operations[message.in_reply_to]
           operation.call(message)
-        elsif @handler.respond_to?(func) 
-          @handler.send(func, message) do |response|
+        elsif can_receive?(message.class)
+          # self.class.message_handlers is populated by subclasses
+          # invoking 'handle'
+          func = self.class.message_handlers[message.class]
+          respone_handler = lambda do |response|
             reply_destination = message.reply_to
             response.from_queue = queue
             sendmsg(reply_destination, response)
           end
+          func.call(message, respone_handler)
 
-          # We should allow the message handler to defer acking if they want
-          # For instance, if we want to index things, but only want to ack
-          # things once we actually flush to disk.
+          # TODO(sissel): We should allow the message handler to defer acking
+          # if they want For instance, if we want to index things, but only
+          # want to ack things once we actually flush to disk.
         else
           $stderr.puts "#{@handler.class.name} does not support #{func}"
-        end # if @handler.respond_to?(func)
+        end 
       end
       hdr.ack
     end # def handle_message
@@ -167,6 +182,10 @@ module MQRPC
     def run
       @amqpthread.join
     end # run
+
+    def can_receive?(message_class)
+      return self.class.message_handlers.include?(message_class)
+    end
 
     def handle_subscriptions
       while true do
