@@ -14,7 +14,7 @@ module AMQP
   module Client
     alias :original_reconnect :reconnect 
     def reconnect(*args)
-      $logger.warn "reconnecting to broker (bad MQ settings?)"
+      MQRPC::logger.warn "reconnecting to broker (bad MQ settings?)"
 
       # some rate limiting
       sleep(5)
@@ -144,8 +144,8 @@ module MQRPC
         if message.respond_to?(:from_queue)
           slidingwindow = @slidingwindow[message.from_queue]
         end
-        MQRPC::logger.debug "#{Thread.current} Got message #{message.class}##{message.id} on queue #{queue}"
-        MQRPC::logger.debug "Received message: #{message.inspect}"
+        MQRPC::logger.debug "Got message #{message.class}##{message.id} on queue #{queue}"
+        #MQRPC::logger.debug "Received message: #{message.inspect}"
         if (message.respond_to?(:in_reply_to) and 
             slidingwindow.include?(message.in_reply_to))
           MQRPC::logger.debug "Got response to #{message.in_reply_to}"
@@ -194,12 +194,14 @@ module MQRPC
         when :queue
           next if @queues.include?(name)
           MQRPC::logger.info "Subscribing to queue #{name}"
+          exchange = @mq.topic(@config.mqexchange, :durable => true)
           mq_q = @mq.queue(name, :durable => true)
+          mq_q.bind(exchange, :key => "*")
           mq_q.subscribe(:ack => true) { |hdr, msg| @receive_queue << [hdr, msg] }
           @queues << name
         when :topic
           MQRPC::logger.info "Subscribing to topic #{name}"
-          exchange = @mq.topic(@config.mqexchange)
+          exchange = @mq.topic(@config.mqexchange, :durable => true)
           mq_q = @mq.queue("#{@id}-#{name}",
                            :exclusive => true,
                            :auto_delete => true).bind(exchange, :key => name)
@@ -266,7 +268,7 @@ module MQRPC
           flushout(destination)
         end
       else
-        MQRPC::logger.debug "#{Thread.current} Sending to #{destination}: #{msg.inspect}"
+        MQRPC::logger.debug "Sending to #{destination}: #{msg.inspect}"
         @mq.queue(destination, :durable => true).publish([msg].to_json, :persistent => true)
       end
 
