@@ -1,0 +1,37 @@
+#summary discusses design/implementation of pipeline functions
+
+= MQPRC Pipeline Functions =
+
+Pipeline functions are simply functions that have output sending data to another queue.
+
+A simple example of of logstash's plain text parsing. A log line goes from the agent, to the parser, to the indexer. The parser does work, then sends a message to the indexer so it can do work
+
+We need a way to declare a function as being a pipeline operation.
+
+= Why do we need this? =
+
+In the example above, Agent -> Parser traffic is throttled when the Agent has too many pending requests that need responses.
+
+However, what do we do when the Parser -> Indexer path has too many pending requests? How can we stop the flow of input?
+
+Simple: When blocked waiting for replies from the indexer, unsubscribe from the queue that is the input to the parser. When we unblock, we should resubscribe to the input queue.
+
+= How can we easily describe this in code? =
+
+{{{
+class Foo < MQRPC::Agent
+  pipes "logstash" => "logstash-index"
+
+  def IndexEventRequestHandler(message)
+    # Respond to the message
+    response = ...
+    yield response
+
+    # Send a message to the indexer
+    index_message = ...
+    sendmsg("logstash-index", index_message)
+  end
+end # class Foo
+}}}
+
+In the above example, we declare that messages to queue "logstash-index" are a result of messages from queue "logstash". This lets us trigger additional events when we would-block and when we unblock, saying that we should unsubscribe and then resubscribe to the queue "logstash"
