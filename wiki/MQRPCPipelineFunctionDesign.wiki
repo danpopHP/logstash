@@ -20,7 +20,7 @@ Simple: When blocked waiting for replies from the indexer, unsubscribe from the 
 
 {{{
 class Foo < MQRPC::Agent
-  pipes "logstash" => "logstash-index"
+  pipeline "logstash" => "logstash-index"
 
   def IndexEventRequestHandler(message)
     # Respond to the message
@@ -35,6 +35,14 @@ end # class Foo
 }}}
 
 In the above example, we declare that messages to queue "logstash-index" are a result of messages from queue "logstash". This lets us trigger additional events when we would-block and when we unblock writes to 'logstash-index', saying that we should unsubscribe and then resubscribe to the queue "logstash"
+
+= Implementation of block/unblock events =
+
+Declaring a pipeline would register two event handlers, a block and an unblock.
+
+This means we need to extend SizedThreadSafeHash to include a block and unblock event callback.
+
+In MQRPC::Agent, each output queue gets its own SizedThreadSafeHash, so we can define specific callbacks for each queue. This means we can trigger unsubscribe from any input queue(s) due to a full output queue.
 
 = Problems =
 
