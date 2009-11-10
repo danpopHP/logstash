@@ -49,3 +49,7 @@ Calling 'unsubscribe' on a queue can still result in already-received-not-proces
 
    If rejection doesn't work, we can, knowing we are unsubscribed, ack the message and 
    requeue it explicitly without modification.
+
+  * drop the message, hoping the queue will resend to another queue listener.
+  
+  I haven't tested this.
