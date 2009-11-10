@@ -34,4 +34,18 @@ class Foo < MQRPC::Agent
 end # class Foo
 }}}
 
-In the above example, we declare that messages to queue "logstash-index" are a result of messages from queue "logstash". This lets us trigger additional events when we would-block and when we unblock, saying that we should unsubscribe and then resubscribe to the queue "logstash"
+In the above example, we declare that messages to queue "logstash-index" are a result of messages from queue "logstash". This lets us trigger additional events when we would-block and when we unblock writes to 'logstash-index', saying that we should unsubscribe and then resubscribe to the queue "logstash"
+
+= Problems =
+
+Calling 'unsubscribe' on a queue can still result in already-received-not-processed messages being handled. Our options are:
+
+  * reject { :requeue => true }
+
+  Calling header.reject may work, but MQ::Header#reject claims that rabbitmq doesn't 
+  implement this. Indeed, trying this results in: ` COMMAND_INVALID - unimplemented method in AMQP::Protocol::Basic::Reject`
+
+  * ack and requeue manually.
+
+   If rejection doesn't work, we can, knowing we are unsubscribed, ack the message and 
+   requeue it explicitly without modification.
