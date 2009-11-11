@@ -63,21 +63,29 @@ module MQRPC
       @topics = Set.new
       @receive_queue = Queue.new
       @want_subscriptions = Queue.new
+
+      # figure out how to really do this correctly, see also def self.pipeline
+      if self.class.pipelines == nil
+        self.class.pipelines = Hash.new
+      end
+
       @slidingwindow = Hash.new do |h,k| 
         MQRPC::logger.debug "New sliding window for #{k}"
         h[k] = SizedThreadSafeHash.new(MAXMESSAGEWAIT) do |state|
-          return unless self.pipelines[k]
-          source = self.pipelines[k]
-          case state
-          when :blocked
-            MQRPC::logger.info("Queue '#{k}' is full, unsubscribing from #{source}")
-            mq_q = @mq.queue(source, :durable => true)
-            mq_q.bind(exchange, :key => "*")
-            mq_q.unsubscribe
-            @queues.remove(source)
-          when :ready
-            MQRPC::logger.info("Queue '#{k}' is ready, resubscribing to #{source}")
-            subscribe(source)
+          if self.class.pipelines[k]
+            source = self.class.pipelines[k]
+            case state
+            when :blocked
+              MQRPC::logger.info("Queue '#{k}' is full, unsubscribing from #{source}")
+              exchange = @mq.topic(@config.mqexchange, :durable => true)
+              mq_q = @mq.queue(source, :durable => true)
+              mq_q.bind(exchange, :key => "*")
+              mq_q.unsubscribe
+              @queues.delete(source)
+            when :ready
+              MQRPC::logger.info("Queue '#{k}' is ready, resubscribing to #{source}")
+              subscribe(source)
+            end
           end
         end
       end
@@ -206,7 +214,7 @@ module MQRPC
           # if they want For instance, if we want to index things, but only
           # want to ack things once we actually flush to disk.
         else
-          $stderr.puts "#{@handler.class.name} does not support #{func}"
+          $stderr.puts "#{@handler.class.name} does not support #{message.class}"
         end 
       end
       hdr.ack
