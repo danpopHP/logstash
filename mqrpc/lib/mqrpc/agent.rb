@@ -6,6 +6,7 @@ require 'mqrpc/operation'
 require 'mqrpc/sizedhash'
 require 'thread'
 require 'uuid'
+require 'set'
 
 # http://github.com/tmm1/amqp/issues/#issue/3
 # This is our (lame) hack to at least notify the user that something is
@@ -32,6 +33,7 @@ module MQRPC
 
     class << self
       attr_accessor :message_handlers
+      attr_accessor :pipelines
     end
 
     # Subclasses use this to declare their support of
@@ -43,19 +45,41 @@ module MQRPC
       self.message_handlers[messageclass] = method
     end
 
+    def self.pipeline(source, destination)
+      if self.pipelines == nil
+        self.pipelines = Hash.new
+      end
+
+      self.pipelines[destination] = source
+    end
+
     def initialize(config)
       Thread::abort_on_exception = true
       @config = config
       @handler = self
       @id = UUID::generate
       @outbuffer = Hash.new { |h,k| h[k] = [] }
-      @queues = []
-      @topics = []
+      @queues = Set.new
+      @topics = Set.new
       @receive_queue = Queue.new
       @want_subscriptions = Queue.new
       @slidingwindow = Hash.new do |h,k| 
         MQRPC::logger.debug "New sliding window for #{k}"
-        h[k] = SizedThreadSafeHash.new(MAXMESSAGEWAIT) 
+        h[k] = SizedThreadSafeHash.new(MAXMESSAGEWAIT) do |state|
+          return unless self.pipelines[k]
+          source = self.pipelines[k]
+          case state
+          when :blocked
+            MQRPC::logger.info("Queue '#{k}' is full, unsubscribing from #{source}")
+            mq_q = @mq.queue(source, :durable => true)
+            mq_q.bind(exchange, :key => "*")
+            mq_q.unsubscribe
+            @queues.remove(source)
+          when :ready
+            MQRPC::logger.info("Queue '#{k}' is ready, resubscribing to #{source}")
+            subscribe(source)
+          end
+        end
       end
 
       @mq = nil
@@ -97,9 +121,7 @@ module MQRPC
           end
 
           MQRPC::logger.info "Subscribing to main queue #{@id}"
-          mq_q = @mq.queue(@id, :auto_delete => true)
-          mq_q.subscribe(:ack =>true) { |hdr, msg| @receive_queue << [hdr, msg] }
-          #handle_new_subscriptions
+          subscribe(@id)
           
           # TODO(sissel): make this a deferred thread that reads from a Queue
           #EM.add_periodic_timer(5) { handle_new_subscriptions }
@@ -132,12 +154,26 @@ module MQRPC
     end # def subscribe_topic
 
     def handle_message(hdr, msg_body)
+      queue = hdr.routing_key
+
+      # If we just unsubscribed from a queue, we may still have some
+      # messages buffered, so reject the message.
+      # Currently RabbitMQ doesn't support message rejection, so let's
+      # ack the message then push it back into the queue, unmodified.
+      if !@queues.include?(queue)
+        MQRPC::logger.warn("Got message on queue #{queue} that we are not "\
+                           "subscribed to; rejecting")
+        hdr.ack
+        @mq.queue(queue, :durable => true).publish(msg_body, :persistent => true)
+        return
+      end
+
+      # TODO(sissel): handle any exceptions we might get from here.
       obj = JSON::load(msg_body)
       if !obj.is_a?(Array)
         obj = [obj]
       end
 
-      queue = hdr.routing_key
       obj.each do |item|
         message = Message.new_from_data(item)
         slidingwindow = @slidingwindow[queue]
