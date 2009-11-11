@@ -5,11 +5,13 @@ require 'mqrpc'
 # The only time we will block execution is in setting new items.
 # That is, SizedThreadSafeHash#[]=
 class SizedThreadSafeHash
-  def initialize(size)
+  def initialize(size, &callback)
     @lock = Mutex.new
     @size = size
     @condvar = ConditionVariable.new
     @data = Hash.new
+    @callback = callback
+    @state = nil
   end # def initialize
 
   # set a key and value
@@ -18,9 +20,10 @@ class SizedThreadSafeHash
       # If adding a new item, wait if the hash is full
       if !@data.has_key?(key) and _withlock_full?
         MQRPC::logger.info "#{self}: Waiting to add key #{key.inspect}, hash is full"
-        #MQRPC::logger.info "#{self}: Keys: #{@data.keys.inspect}"
-        #MQRPC::logger.info "#{self} current thread is #{Thread.current}"
-        #pp @data
+        if @state != :blocked
+          @state = :blocked
+          @callback.call(@state) if @callback
+        end
         @condvar.wait(@lock)
       end
       @data[key] = value
@@ -51,6 +54,10 @@ class SizedThreadSafeHash
       if was_full
         MQRPC::logger.info "#{self}: signalling non-fullness"
         @condvar.signal
+        if @state != :ready
+          @state = :ready
+          @callback.call(@state) if @callback
+        end
       end
     end
   end # def delete
