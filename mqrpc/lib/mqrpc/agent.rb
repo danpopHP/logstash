@@ -36,11 +36,11 @@ module MQRPC
 
     # Subclasses use this to declare their support of
     # any given message
-    def self.handle(messageclass, &block)
+    def self.handle(messageclass, method)
       if self.message_handlers == nil
         self.message_handlers = Hash.new
       end
-      self.message_handlers[messageclass] = block
+      self.message_handlers[messageclass] = method
     end
 
     def initialize(config)
@@ -159,15 +159,12 @@ module MQRPC
           operation = @message_operations[message.in_reply_to]
           operation.call(message)
         elsif can_receive?(message.class)
-          # self.class.message_handlers is populated by subclasses
-          # invoking 'handle'
           func = self.class.message_handlers[message.class]
-          respone_handler = lambda do |response|
+          self.send(func, message) do |response|
             reply_destination = message.reply_to
             response.from_queue = queue
             sendmsg(reply_destination, response)
           end
-          func.call(message, respone_handler)
 
           # TODO(sissel): We should allow the message handler to defer acking
           # if they want For instance, if we want to index things, but only
