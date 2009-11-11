@@ -5,6 +5,8 @@ require 'add_message'
 MQRPC::logger.level = Logger::DEBUG
 
 class Adder < MQRPC::Agent
+  handle AddRequest, :AddRequestHandler
+  
   def AddRequestHandler(request)
     puts "Got #{request.class.name} for #{request.numbers.inspect}"
     sum = request.numbers.reduce { |a,b| a + b }
