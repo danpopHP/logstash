@@ -1,12 +1,20 @@
 require 'thread'
 require 'mqrpc'
 
+class TrackingMutex < Mutex
+  def synchronize(&blk)
+    puts "Enter synchronize #{self} @ #{Thread.current} + #{caller[0]}"
+    super { blk.call }
+    puts "Exit synchronize #{self} @ #{Thread.current} + #{caller[0]}"
+  end # def synchronize
+end # clas TrackingMutex < Mutex
+
 # Thread-safe sized hash similar to SizedQueue.
 # The only time we will block execution is in setting new items.
 # That is, SizedThreadSafeHash#[]=
 class SizedThreadSafeHash
   def initialize(size, &callback)
-    @lock = Mutex.new
+    @lock = TrackingMutex.new
     @size = size
     @condvar = ConditionVariable.new
     @data = Hash.new
@@ -24,7 +32,13 @@ class SizedThreadSafeHash
           @state = :blocked
           @callback.call(@state) if @callback
         end
+
         @condvar.wait(@lock)
+
+        if @state != :ready
+          @state = :ready
+          @callback.call(@state) if @callback
+        end
       end
       @data[key] = value
     end
@@ -54,10 +68,6 @@ class SizedThreadSafeHash
       if was_full
         MQRPC::logger.info "#{self}: signalling non-fullness"
         @condvar.signal
-        if @state != :ready
-          @state = :ready
-          @callback.call(@state) if @callback
-        end
       end
     end
   end # def delete
