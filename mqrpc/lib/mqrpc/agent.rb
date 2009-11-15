@@ -133,7 +133,6 @@ module MQRPC
           EM.defer { handle_subscriptions }
 
           EM.add_periodic_timer(1) do
-            # TODO(sissel): add locking
             @outbuffer.each_key { |dest| flushout(dest) }
             @outbuffer.clear
           end
@@ -245,6 +244,7 @@ module MQRPC
     end
 
     def handle_subscriptions
+      Thread.current[:name] = "subscriptionhandler"
       while true do
         queuetype, name = @want_subscriptions.pop
 
