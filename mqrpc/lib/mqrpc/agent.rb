@@ -232,6 +232,7 @@ module MQRPC
     end # def handle_message
 
     def run
+      Thread.current[:name] ||= "#{self.class.name}#run"
       @amqpthread.join
     end # run
 
@@ -260,10 +261,12 @@ module MQRPC
           mq_q = @mq.queue(name, :durable => true)
           mq_q.bind(exchange, :key => "*")
           mq_q.subscribe(:ack => true) do |hdr, msg| 
-            MQRPC::logger.info("received message on #{name}")
+            queue = hdr.routing_key
+            MQRPC::logger.info("received message on #{queue}")
             @receive_queue << [hdr, msg]
-            MQRPC::logger.info("finished receiving message on #{name}") 
-            MQRPC::logger.info("#{name} queue size: #{@receive_queue.length}") 
+            MQRPC::logger.info("finished receiving message on #{queue}") 
+            MQRPC::logger.info("msg: #{msg}")
+            MQRPC::logger.info("#{queue} queue size: #{@receive_queue.length}") 
           end
           @queues << name
         when :topic
