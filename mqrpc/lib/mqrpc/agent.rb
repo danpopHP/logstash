@@ -74,6 +74,7 @@ module MQRPC
         h[k] = SizedThreadSafeHash.new(MAXMESSAGEWAIT) do |state|
           if self.class.pipelines[k]
             source = self.class.pipelines[k]
+            MQRPC::logger.debug "Got sizedhash callback for #{k}: #{state}"
             case state
             when :blocked
               MQRPC::logger.info("Queue '#{k}' is full, unsubscribing from #{source}")

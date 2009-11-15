@@ -3,9 +3,9 @@ require 'mqrpc'
 
 class TrackingMutex < Mutex
   def synchronize(&blk)
-    puts "Enter synchronize #{self} @ #{Thread.current} + #{caller[0]}"
+    #puts "Enter synchronize #{self} @ #{Thread.current} + #{caller[0]}"
     super { blk.call }
-    puts "Exit synchronize #{self} @ #{Thread.current} + #{caller[0]}"
+    #puts "Exit synchronize #{self} @ #{Thread.current} + #{caller[0]}"
   end # def synchronize
 end # clas TrackingMutex < Mutex
 
@@ -13,6 +13,9 @@ end # clas TrackingMutex < Mutex
 # The only time we will block execution is in setting new items.
 # That is, SizedThreadSafeHash#[]=
 class SizedThreadSafeHash
+  attr_reader :callback
+  attr_reader :size
+
   def initialize(size, &callback)
     @lock = TrackingMutex.new
     @size = size
@@ -27,17 +30,22 @@ class SizedThreadSafeHash
     @lock.synchronize do
       # If adding a new item, wait if the hash is full
       if !@data.has_key?(key) and _withlock_full?
-        MQRPC::logger.info "#{self}: Waiting to add key #{key.inspect}, hash is full"
+        MQRPC::logger.info "#{self}: Waiting to add key #{key.inspect}, hash is full (thraed #{Thread.current})"
         if @state != :blocked
           @state = :blocked
           @callback.call(@state) if @callback
+        else
+          puts "State is already #{@state} (want :blocked), skipping event call"
         end
 
         @condvar.wait(@lock)
 
         if @state != :ready
           @state = :ready
+          MQRPC::logger.info "#{self}: state => :ready"
           @callback.call(@state) if @callback
+        else
+          puts "State is already #{@state} (want :ready), skipping event call"
         end
       end
       @data[key] = value
@@ -99,16 +107,3 @@ class SizedThreadSafeHash
     return @data.size >= @size
   end
 end # class SizedThreadSafeHash
-
-#sh = SizedThreadSafeHash.new(10)
-#Thread.new do
-  #0.upto(100) do |i|
-    #sh[i] = true
-  #end
-#end
-
-#0.upto(100) do |i|
-  #puts sh[i]
-  #sh.delete(i)
-  #sleep 1
-#end
