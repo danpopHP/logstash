@@ -331,7 +331,7 @@ module MQRPC
       end
 
       if block_given?
-        op = Operation.new(callback)
+        op = Operation.new &callback
         MQRPC::logger.debug "New operation for #{msg.id}"
         @message_operations[msg.id] = op
         return op
