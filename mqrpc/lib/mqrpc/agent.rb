@@ -177,8 +177,13 @@ module MQRPC
         return
       end
 
-      # TODO(sissel): handle any exceptions we might get from here.
-      obj = JSON::load(msg_body)
+      begin
+        obj = JSON::load(msg_body)
+      rescue JSON::ParserError
+        MQRPC::logger.warn("Skipping non-JSON message: #{msg_body}")
+        hdr.ack
+        return
+      end
       if !obj.is_a?(Array)
         obj = [obj]
       end
