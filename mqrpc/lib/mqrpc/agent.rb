@@ -159,12 +159,17 @@ module MQRPC
       exchange = @mq.topic(@config.mqexchange, :durable => true)
       mq_q = @mq.queue(name, :durable => true)
       mq_q.bind(exchange, :key => "*")
-      mq_q.unsubscribe { @queues.delete(name) }
 
-      # wait for unsubscribe to finish; it's async
-      while @queues.member?(name)
-        sleep(0.1)
-      end
+      op = Operation.new
+      mq_q.unsubscribe { op.finished }
+      op.wait_until_finished
+      @queues.delete(name)
+
+      #mq_q.unsubscribe { @queues.delete(name) }
+      ## wait for unsubscribe to finish; it's async
+      #while @queues.member?(name)
+        #sleep(0.1)
+      #end
     end # def unsubscribe
 
     def subscribe_topic(name)
