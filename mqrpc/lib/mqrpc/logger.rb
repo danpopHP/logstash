@@ -19,7 +19,8 @@ class FormatterWithThread < Logger::Formatter
   Format = "%s, [%s#%d/%s] %5s -- %s: %s\n"
 
   def call(severity, time, progname, msg)
-    Format % [severity[0..0], format_datetime(time), $$, Thread.current,
+    thread_id = (Thread.current[:name] or Thread.current)
+    Format % [severity[0..0], format_datetime(time), $$, thread_id,
               severity, progname, msg2str(msg)]
   end
 end

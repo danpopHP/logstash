@@ -78,11 +78,7 @@ module MQRPC
             case state
             when :blocked
               MQRPC::logger.info("Queue '#{k}' is full, unsubscribing from #{source}")
-              exchange = @mq.topic(@config.mqexchange, :durable => true)
-              mq_q = @mq.queue(source, :durable => true)
-              mq_q.bind(exchange, :key => "*")
-              mq_q.unsubscribe
-              @queues.delete(source)
+              unsubscribe(source)
             when :ready
               MQRPC::logger.info("Queue '#{k}' is ready, resubscribing to #{source}")
               subscribe(source)
@@ -113,6 +109,7 @@ module MQRPC
 
     def start_amqp
       @amqpthread = Thread.new do 
+        Thread.current[:name] = "AMQP"
         # Create connection to AMQP, and in turn, the main EventMachine loop.
         amqp_config = {:host => @config.mqhost,
                        :port => @config.mqport,
@@ -133,7 +130,6 @@ module MQRPC
           subscribe(@id)
           
           # TODO(sissel): make this a deferred thread that reads from a Queue
-          #EM.add_periodic_timer(5) { handle_new_subscriptions }
           EM.defer { handle_subscriptions }
 
           EM.add_periodic_timer(1) do
@@ -147,6 +143,7 @@ module MQRPC
 
     def start_receiver
       Thread.new do 
+        Thread.current[:name] = "receiver"
         while true
           header, message = @receive_queue.pop
           handle_message(header, message)
@@ -155,8 +152,17 @@ module MQRPC
     end # def start_receiver
 
     def subscribe(name)
+      MQRPC::logger.info "Wanting to subscribe to queue #{name}"
       @want_subscriptions << [:queue, name]
     end # def subscribe
+
+    def unsubscribe(name)
+      exchange = @mq.topic(@config.mqexchange, :durable => true)
+      mq_q = @mq.queue(name, :durable => true)
+      mq_q.bind(exchange, :key => "*")
+      mq_q.unsubscribe
+      @queues.delete(name)
+    end # def unsubscribe
 
     def subscribe_topic(name)
       @want_subscriptions << [:topic, name]
@@ -169,6 +175,7 @@ module MQRPC
       # messages buffered, so reject the message.
       # Currently RabbitMQ doesn't support message rejection, so let's
       # ack the message then push it back into the queue, unmodified.
+      MQRPC::logger.info "1"
       if !@queues.include?(queue)
         MQRPC::logger.warn("Got message on queue #{queue} that we are not "\
                            "subscribed to; rejecting")
@@ -177,6 +184,7 @@ module MQRPC
         return
       end
 
+      MQRPC::logger.info "2"
       begin
         obj = JSON::load(msg_body)
       rescue JSON::ParserError
@@ -188,12 +196,15 @@ module MQRPC
         obj = [obj]
       end
 
+      MQRPC::logger.info "3"
       obj.each do |item|
         message = Message.new_from_data(item)
         slidingwindow = @slidingwindow[queue]
+        MQRPC::logger.info "4"
         if message.respond_to?(:from_queue)
           slidingwindow = @slidingwindow[message.from_queue]
         end
+        MQRPC::logger.info "5"
         MQRPC::logger.debug "Got message #{message.class}##{message.id} on queue #{queue}"
         #MQRPC::logger.debug "Received message: #{message.inspect}"
         if (message.respond_to?(:in_reply_to) and 
@@ -231,20 +242,34 @@ module MQRPC
     end # run
 
     def can_receive?(message_class)
+      if self.class.message_handlers == nil
+        self.class.message_handlers = []
+      end
+
       return self.class.message_handlers.include?(message_class)
     end
 
     def handle_subscriptions
       while true do
-        type, name = @want_subscriptions.pop
-        case type
+        queuetype, name = @want_subscriptions.pop
+
+        case queuetype
         when :queue
-          next if @queues.include?(name)
+          if @queues.include?(name) 
+            MQRPC::logger.info "Ignoring subscription request to queue "\
+                               "#{name}, already subscribed."
+            next
+          end
           MQRPC::logger.info "Subscribing to queue #{name}"
           exchange = @mq.topic(@config.mqexchange, :durable => true)
           mq_q = @mq.queue(name, :durable => true)
           mq_q.bind(exchange, :key => "*")
-          mq_q.subscribe(:ack => true) { |hdr, msg| @receive_queue << [hdr, msg] }
+          mq_q.subscribe(:ack => true) do |hdr, msg| 
+            MQRPC::logger.info("received message on #{name}")
+            @receive_queue << [hdr, msg]
+            MQRPC::logger.info("finished receiving message on #{name}") 
+            MQRPC::logger.info("#{name} queue size: #{@receive_queue.length}") 
+          end
           @queues << name
         when :topic
           MQRPC::logger.info "Subscribing to topic #{name}"
@@ -254,30 +279,9 @@ module MQRPC
                            :auto_delete => true).bind(exchange, :key => name)
           mq_q.subscribe { |hdr, msg| @receive_queue << [hdr, msg] }
           @topics << name
-        end
-      end
-    end
-
-    def handle_new_subscriptions
-      todo = @want_queues - @queues
-      todo.each do |queue|
-        MQRPC::logger.info "Subscribing to queue #{queue}"
-        mq_q = @mq.queue(queue, :durable => true)
-        mq_q.subscribe(:ack => true) { |hdr, msg| @receive_queue << [hdr, msg] }
-        @queues << queue
-      end # todo.each
-
-      todo = @want_topics - @topics
-      todo.each do |topic|
-        MQRPC::logger.info "Subscribing to topic #{topic}"
-        exchange = @mq.topic(@config.mqexchange)
-        mq_q = @mq.queue("#{@id}-#{topic}",
-                         :exclusive => true,
-                         :auto_delete => true).bind(exchange, :key => topic)
-        mq_q.subscribe { |hdr, msg| @receive_queue << [hdr, msg] }
-        @topics << topic
-      end # todo.each
-    end # handle_new_subscriptions
+        end # case queuetype
+      end # while true
+    end # def handle_subscriptions
 
     def flushout(destination)
       msgs = @outbuffer[destination]
@@ -321,6 +325,7 @@ module MQRPC
 
       if block_given?
         op = Operation.new(callback)
+        MQRPC::logger.debug "New operation for #{msg.id}"
         @message_operations[msg.id] = op
         return op
       end
