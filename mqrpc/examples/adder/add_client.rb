@@ -19,6 +19,7 @@ class AdderClient < MQRPC::Agent
   end # def
 end # class AdderClient < MQRPC::Agent
 
+MQRPC::logger.level = Logger::DEBUG
 config = MQRPC::Config.new({ "mqhost" => "localhost" })
 adder = AdderClient.new(config)
 adder.run
