@@ -3,9 +3,9 @@ require 'mqrpc'
 
 class TrackingMutex < Mutex
   def synchronize(&blk)
-    #puts "Enter synchronize #{self} @ #{Thread.current} + #{caller[0]}"
+    MQRPC::logger.debug "Enter synchronize #{self} @ #{caller[0]}"
     super { blk.call }
-    #puts "Exit synchronize #{self} @ #{Thread.current} + #{caller[0]}"
+    MQRPC::logger.debug "Exit synchronize #{self} @ #{caller[0]}"
   end # def synchronize
 end # clas TrackingMutex < Mutex
 
