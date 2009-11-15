@@ -175,7 +175,6 @@ module MQRPC
       # messages buffered, so reject the message.
       # Currently RabbitMQ doesn't support message rejection, so let's
       # ack the message then push it back into the queue, unmodified.
-      MQRPC::logger.info "1"
       if !@queues.include?(queue)
         MQRPC::logger.warn("Got message on queue #{queue} that we are not "\
                            "subscribed to; rejecting")
@@ -184,7 +183,6 @@ module MQRPC
         return
       end
 
-      MQRPC::logger.info "2"
       begin
         obj = JSON::load(msg_body)
       rescue JSON::ParserError
@@ -196,15 +194,12 @@ module MQRPC
         obj = [obj]
       end
 
-      MQRPC::logger.info "3"
       obj.each do |item|
         message = Message.new_from_data(item)
         slidingwindow = @slidingwindow[queue]
-        MQRPC::logger.info "4"
         if message.respond_to?(:from_queue)
           slidingwindow = @slidingwindow[message.from_queue]
         end
-        MQRPC::logger.info "5"
         MQRPC::logger.debug "Got message #{message.class}##{message.id} on queue #{queue}"
         #MQRPC::logger.debug "Received message: #{message.inspect}"
         if (message.respond_to?(:in_reply_to) and 
