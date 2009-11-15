@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'mqrpc'
+require 'mqrpc/functions/ping'
 require 'thread'
 require 'hello_message'
 
@@ -9,6 +10,18 @@ class HelloPiper < MQRPC::Agent
   handle HelloRequest, :HelloRequestHandler
   handle HelloResponse, :noop
   pipeline "hello", "hello-two"
+
+  #include MQRPC::Functions::Ping
+  handle MQRPC::Messages::PingRequest, :PingRequestHandler
+
+  def PingRequestHandler(request)
+    MQRPC::logger.debug "received PingRequest (#{request.pingdata})"
+    response = MQRPC::Messages::PingResponse.new(request)
+    response.id = request.id
+    response.pingdata = request.pingdata
+    yield response
+  end
+
 
   def initialize(*args)
     super
@@ -22,7 +35,9 @@ class HelloPiper < MQRPC::Agent
   def HelloRequestHandler(request)
     #puts "piper: got #{request.class.name}"
 
-    @outqueue << ["hello-two", HelloRequest.new]
+    newreq = HelloRequest.new
+    newreq.delayable = request.delayable
+    @outqueue << ["hello-two", newreq]
 
     response = HelloResponse.new(request)
     yield response
@@ -32,6 +47,7 @@ class HelloPiper < MQRPC::Agent
   def run
     # listen for messages on the 'adder' queue
     subscribe("hello")
+    subscribe("pingme")
     start_sender
     super
   end

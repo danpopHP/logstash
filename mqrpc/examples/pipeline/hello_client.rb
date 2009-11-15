@@ -6,6 +6,7 @@ class Client < MQRPC::Agent
   def run
     loop do
       request = HelloRequest.new
+      request.delayable = true
       sendmsg("hello", request)
     end
   end # def run
