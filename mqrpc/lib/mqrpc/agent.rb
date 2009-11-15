@@ -257,7 +257,6 @@ module MQRPC
       Thread.current[:name] = "subscriptionhandler"
       while true do
         queuetype, name = @want_subscriptions.pop
-        @queues << name
 
         case queuetype
         when :queue
@@ -267,6 +266,7 @@ module MQRPC
             next
           end
           MQRPC::logger.info "Subscribing to queue #{name}"
+          @queues << name
           exchange = @mq.topic(@config.mqexchange, :durable => true)
           mq_q = @mq.queue(name, :durable => true)
           mq_q.bind(exchange, :key => "*")
