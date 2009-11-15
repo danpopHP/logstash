@@ -30,7 +30,7 @@ class SizedThreadSafeHash
     @lock.synchronize do
       # If adding a new item, wait if the hash is full
       if !@data.has_key?(key) and _withlock_full?
-        MQRPC::logger.info "#{self}: Waiting to add key #{key.inspect}, hash is full (thraed #{Thread.current})"
+        MQRPC::logger.info "#{self}: Waiting to add key #{key.inspect}, hash is full (thread #{Thread.current})"
         if @state != :blocked
           @state = :blocked
           @callback.call(@state) if @callback
