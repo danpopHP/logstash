@@ -108,6 +108,10 @@ module MQRPC
     # Nothing.
   end # class RequestMessage
 
+  class DummyMessage < Message
+    # Nothing.
+  end # class DummyMessage
+
   class ResponseMessage < Message
     header :in_reply_to
     header :from_queue

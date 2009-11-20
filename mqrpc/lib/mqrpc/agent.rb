@@ -266,11 +266,16 @@ module MQRPC
             next
           end
           MQRPC::logger.info "Subscribing to queue #{name}"
-          @queues << name
+          # Send a dummy message to queue #{name} so there's at least
+          # one message to receive, and wake up our Operation.
+          sendmsg(name, DummyMessage.new)
           exchange = @mq.topic(@config.mqexchange, :durable => true)
           mq_q = @mq.queue(name, :durable => true)
           mq_q.bind(exchange, :key => "*")
+          op = Operation.new
           mq_q.subscribe(:ack => true) do |hdr, msg| 
+            op.finished
+            return if msg.is_a?(DummyMessage)
             queue = hdr.routing_key
             MQRPC::logger.info("received message on #{queue}")
             @receive_queue << [hdr, msg]
@@ -278,6 +283,11 @@ module MQRPC
             MQRPC::logger.info("msg: #{msg}")
             MQRPC::logger.info("#{queue} queue size: #{@receive_queue.length}") 
           end
+          # Wait until we receive our first message (might be DummyMessage,
+          # doesn't matter) -- this confirms we are subscribed. subscribe
+          # is async...
+          op.wait_until_finished
+          @queues << name
         when :topic
           MQRPC::logger.info "Subscribing to topic #{name}"
           exchange = @mq.topic(@config.mqexchange, :durable => true)
