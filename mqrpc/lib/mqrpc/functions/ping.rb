@@ -1,7 +1,9 @@
 require 'rubygems'
 require 'mqrpc/messages/ping'
 
-module MQRPC; module Functions; module Ping
+module MQRPC; module Functions; class Ping
+  #handle MQRPC::Messages::PingRequest, :PingRequestHandler
+
   def PingRequestHandler(request)
     MQRPC::logger.debug "received PingRequest (#{request.pingdata})"
     response = MQRPC::Messages::PingResponse.new
