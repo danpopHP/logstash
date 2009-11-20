@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
-#
+
+dir = File.dirname(__FILE__)
+$:.unshift("#{dir}/../../lib") if File.directory?("#{dir}/.svn")
+
 require 'rubygems'
 require 'mqrpc'
 require 'mqrpc/functions/ping'
@@ -20,4 +23,3 @@ MQRPC::logger.level = Logger::DEBUG
 config = MQRPC::Config.new({ "mqhost" => "localhost" })
 client = Client.new(config)
 client.run
-

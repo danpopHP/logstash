@@ -1,3 +1,7 @@
+#!/usr/bin/env ruby
+
+dir = File.dirname(__FILE__)
+$:.unshift("#{dir}/../../lib") if File.directory?("#{dir}/.svn")
 
 require 'rubygems'
 require 'mqrpc'
@@ -18,7 +22,7 @@ class PingServer < MQRPC::Agent
 
   def run
     subscribe("pingme")
-    Thread.new { subber }
+    #Thread.new { subber }
     super
   end
 
