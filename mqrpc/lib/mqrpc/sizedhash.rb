@@ -1,6 +1,7 @@
 require 'thread'
 require 'mqrpc'
 
+# A mutex which logs every enter/exit on synchronize
 class TrackingMutex < Mutex
   def synchronize(&blk)
     MQRPC::logger.debug "Enter synchronize #{self} @ #{caller[0]}"
@@ -17,7 +18,7 @@ class SizedThreadSafeHash
   attr_reader :size
 
   def initialize(size, &callback)
-    @lock = TrackingMutex.new
+    @lock = Mutex.new
     @size = size
     @condvar = ConditionVariable.new
     @data = Hash.new
