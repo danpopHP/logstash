@@ -154,7 +154,7 @@ module MQRPC
     end # def subscribe
 
     def unsubscribe(name)
-      exchange = @mq.topic(@config.mqexchange, :durable => true)
+      exchange = @mq.direct(@config.mqexchange_direct, :durable => true)
       mq_q = @mq.queue(name, :durable => true)
       mq_q.bind(exchange, :key => "*")
 
@@ -270,7 +270,7 @@ module MQRPC
           # Send a dummy message to queue #{name} so there's at least
           # one message to receive, and wake up our Operation.
           sendmsg(name, DummyMessage.new)
-          exchange = @mq.topic(@config.mqexchange, :durable => true)
+          exchange = @mq.direct(@config.mqexchange_direct, :durable => true)
           mq_q = @mq.queue(name, :durable => true)
           mq_q.bind(exchange, :key => "*")
           op = Operation.new
@@ -291,7 +291,7 @@ module MQRPC
           @queues << name
         when :topic
           MQRPC::logger.info "Subscribing to topic #{name}"
-          exchange = @mq.topic(@config.mqexchange, :durable => true)
+          exchange = @mq.topic(@config.mqexchange_topic, :durable => true)
           mq_q = @mq.queue("#{@id}-#{name}",
                            :exclusive => true,
                            :auto_delete => true).bind(exchange, :key => name)
@@ -316,7 +316,7 @@ module MQRPC
       msg.timestamp = Time.now.to_f
 
       data = msg.to_json
-      @mq.topic(@config.mqexchange).publish(data, :key => key)
+      @mq.topic(@config.mqexchange_topic).publish(data, :key => key)
     end
 
     def sendmsg(destination, msg, &callback)
