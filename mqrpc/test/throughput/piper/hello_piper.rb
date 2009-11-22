@@ -1,5 +1,5 @@
 dir = File.dirname(__FILE__)
-$:.unshift("#{dir}/../../lib") if File.directory?("#{dir}/.svn")
+$:.unshift("#{dir}/../../../lib") if File.directory?("#{dir}/.svn")
 
 require 'rubygems'
 require 'mqrpc'
@@ -7,14 +7,11 @@ require 'mqrpc/functions/ping'
 require 'thread'
 require 'hello_message'
 
-MQRPC::logger.level = Logger::DEBUG
-
 class HelloPiper < MQRPC::Agent
   handle HelloRequest, :HelloRequestHandler
   handle HelloResponse, :noop
-  pipeline "hello", "hello-two"
+  pipeline "hello", "hello2"
 
-  #include MQRPC::Functions::Ping
   handle MQRPC::Messages::PingRequest, :PingRequestHandler
 
   def PingRequestHandler(request)
@@ -40,12 +37,12 @@ class HelloPiper < MQRPC::Agent
 
     newreq = HelloRequest.new
     newreq.delayable = request.delayable
-    @outqueue << ["hello-two", newreq]
+    @outqueue << ["hello2", newreq]
 
     response = HelloResponse.new(request)
     yield response
 
-  end # def AddRequestHandler
+  end # def HelloRequest
 
   def run
     # listen for messages on the 'adder' queue
@@ -65,6 +62,7 @@ class HelloPiper < MQRPC::Agent
   end
 end # class HelloPiper < MQRPC::Agent
 
+#MQRPC::logger.level = Logger::DEBUG
 config = MQRPC::Config.new({ "mqhost" => "localhost" })
 piper = HelloPiper.new(config)
 piper.run

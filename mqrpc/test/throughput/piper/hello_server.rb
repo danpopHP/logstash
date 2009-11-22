@@ -15,7 +15,7 @@ class HelloServer < MQRPC::Agent
   end # def AddRequestHandler
 
   def run
-    subscribe("hello")
+    subscribe("hello2")
     super
   end
 end # class HelloServer < MQRPC::Agent
