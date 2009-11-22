@@ -210,10 +210,13 @@ module MQRPC
         end
         MQRPC::logger.debug "Got message #{message.class}##{message.id} on queue #{queue}"
         #MQRPC::logger.debug "Received message: #{message.inspect}"
-        if (message.respond_to?(:in_reply_to) and 
-            slidingwindow.include?(message.in_reply_to))
-          MQRPC::logger.debug "Got response to #{message.in_reply_to}"
-          slidingwindow.delete(message.in_reply_to)
+        if (message.respond_to?(:in_reply_to))
+          if slidingwindow.include?(message.in_reply_to)
+            MQRPC::logger.debug "Got response to #{message.in_reply_to}"
+            slidingwindow.delete(message.in_reply_to)
+          else
+            MQRPC::logger.warn "Got response to #{message.in_reply_to}/#{message.class} but wasn't waiting on it?"
+          end
         end
 
         # Check if we have a specific operation looking for this
