@@ -129,9 +129,7 @@ module MQRPC
           MQRPC::logger.info "Subscribing to main queue #{@id}"
           subscribe(@id)
           
-          # TODO(sissel): make this a deferred thread that reads from a Queue
           EM.defer { handle_subscriptions }
-
           EM.add_periodic_timer(1) do
             @outbuffer.each_key { |dest| flushout(dest) }
             @outbuffer.clear
