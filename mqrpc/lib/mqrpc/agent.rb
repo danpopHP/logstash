@@ -29,7 +29,7 @@ module MQRPC
   # TODO: document this class
   class Agent
     MAXBUF = 20
-    MAXMESSAGEWAIT = MAXBUF * 20
+    MAXMESSAGEWAIT = MAXBUF * 30
 
     class << self
       attr_accessor :message_handlers
