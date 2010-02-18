@@ -1,6 +1,6 @@
 #summary MQRPC Tutorial
 
-= MQPRC Tutorial =
+= MQRPC Tutorial =
 
 <wiki:toc max_depth="3" />
 
