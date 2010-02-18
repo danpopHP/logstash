@@ -1,6 +1,6 @@
 #summary discusses design/implementation of pipeline functions
 
-= MQPRC Pipeline Functions =
+= MQRPC Pipeline Functions =
 
 Pipeline functions are simply functions that have output sending data to another queue.
 
