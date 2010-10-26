@@ -28,6 +28,7 @@ Documentation goals
   * Configuration: tags, inputs, outputs, filters, etc.
   * Document how to configure elasticsearch. Indexing, sharding, mapping, etc.
   * Document best practices
+  * Consistent terminology ("input", "output", "event", "filter", etc).
 
 
 = 2.0 ideas =
