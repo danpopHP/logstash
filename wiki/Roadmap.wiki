@@ -7,6 +7,7 @@
 Feature goals
   * Fully-supported pipe metaphor: inputs, filters, outputs.
   * Inputs: file, exec, amqp, stomp, syslog, tcp
+  * Input variations: file+json, etc.
   * Filters: grok, something grep-like, something sed-like
   * Outputs: stdout, amqp, stomp, tcp, syslog, mongodb, elasticsearch, websockets
   * A default search web interface - elasticsearch only (for 1.0)
@@ -27,3 +28,9 @@ Documentation goals
   * Configuration: tags, inputs, outputs, filters, etc.
   * Document how to configure elasticsearch. Indexing, sharding, mapping, etc.
   * Document best practices
+
+
+= 2.0 ideas =
+
+* Multi-line file support
+* "nearby" log event query (i.e. find events near a stacktrace)
