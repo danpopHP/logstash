@@ -1,0 +1,28 @@
+#summary The roadmap of Doom!
+#labels roadmap
+
+
+= Roadmap for 1.0 =
+
+Feature goals
+  * Fully-supported pipe metaphor: inputs, filters, outputs.
+  * Inputs: file, exec, amqp, stomp, syslog
+  * Filters: grok, something grep-like, something sed-like
+  * Outputs: stdout, amqp, stomp, tcp, syslog, mongodb, elasticsearch, websockets
+  * A default search web interface - elasticsearch only (for 1.0)
+  * Example code that serves up the websockets
+  * Be stable with 10k events/sec going through the system of file input -> amqp -> elasticsearch
+  * Tag support
+
+Supported configurations:
+  * standalone: local files through to elasticsearch
+  * piped: local files to amqp, amqp to a filter to amqp, amqp to elasticsearch
+
+Code quality
+  * Logstash agents should be debuggable through logging.
+  * Each component (input/output/filter) must have tests.
+  * Agent must have tests.
+
+Documentation goals
+  * Document how to configure elasticsearch. Indexing, sharding, mapping, etc.
+  * Document best practices
