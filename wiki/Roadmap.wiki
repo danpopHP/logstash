@@ -6,13 +6,12 @@
 
 Feature goals
   * Fully-supported pipe metaphor: inputs, filters, outputs.
-  * Inputs: file, exec, amqp, stomp, syslog
+  * Inputs: file, exec, amqp, stomp, syslog, tcp
   * Filters: grok, something grep-like, something sed-like
   * Outputs: stdout, amqp, stomp, tcp, syslog, mongodb, elasticsearch, websockets
   * A default search web interface - elasticsearch only (for 1.0)
-  * Example code that serves up the websockets
+  * Basic real-time search web interface through websockets.
   * Be stable with 10k events/sec going through the system of file input -> amqp -> elasticsearch
-  * Tag support
 
 Supported configurations:
   * standalone: local files through to elasticsearch
@@ -24,5 +23,7 @@ Code quality
   * Agent must have tests.
 
 Documentation goals
+  * ElasticSearch should be automatically configured by logstash.
+  * Configuration: tags, inputs, outputs, filters, etc.
   * Document how to configure elasticsearch. Indexing, sharding, mapping, etc.
   * Document best practices
