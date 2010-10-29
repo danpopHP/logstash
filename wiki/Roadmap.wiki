@@ -7,8 +7,8 @@
 Feature goals
   * Fully-supported pipe metaphor: inputs, filters, outputs.
   * Inputs: file, exec, amqp, stomp, syslog, tcp
-  * Input variations: file+json, etc.
-  * Filters: grok, something grep-like, something sed-like
+  * Input variations: file+json, etc. (will be filters)
+  * Filters: grok, time parsing, something grep-like, something sed-like, json
   * Outputs: stdout, amqp, stomp, tcp, syslog, mongodb, elasticsearch, websockets
   * A default search web interface - elasticsearch only (for 1.0)
   * Basic real-time search web interface through websockets.
