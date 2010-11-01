@@ -1,0 +1,41 @@
+#summary Currently known performance problems
+
+= Ruby AMQP =
+
+The ruby amqp library spends a lot of time serializing messages. ruby-prof
+output below comparing hash.to_json with a simple 'publish' serialization. The
+real problem is in AMQP::Buffer, I think.
+
+{{{
+Thread ID: 70059657652660
+Total Time: 15.22
+ 
+  %total   %self     total      self      wait     child            calls   Name
+--------------------------------------------------------------------------------
+ 100.00%   0.00%     15.22      0.00      0.00     15.22                1     Global#[No method] (amqp-msg.rb:23}  amqp-msg.rb:23
+                     15.22      0.05      0.00     15.17              1/1     Integer#upto
+--------------------------------------------------------------------------------
+                     15.22      0.05      0.00     15.17              1/1     Global#[No method]
+ 100.00%   0.33%     15.22      0.05      0.00     15.17                1     Integer#upto (ruby_runtime:0}  ruby_runtime:0
+                     14.59      0.09      0.00     14.50      10000/10000     Array#each
+                      0.58      0.17      0.00      0.41      10000/10000     JSON::Ext::Generator::GeneratorMethods::Hash#to_json
+--------------------------------------------------------------------------------
+                     14.59      0.09      0.00     14.50      10000/10000     Integer#upto
+  95.86%   0.59%     14.59      0.09      0.00     14.50            10000     Array#each (ruby_runtime:0}  ruby_runtime:0
+                      8.41      0.04      0.00      8.37      10000/10000     AMQP::Protocol::Header#to_s
+                      1.75      0.05      0.00      1.70      10000/10000     AMQP::Frame#to_s
+                      4.34      0.03      0.00      4.31      10000/10000     AMQP::Protocol::Class::Method#to_s
+
+
+<skip>
+--------------------------------------------------------------------------------
+                      8.26      0.16      0.00      8.10      10000/10000     AMQP::Protocol::Header#to_s
+  54.27%   1.05%      8.26      0.16      0.00      8.10            10000     AMQP::Protocol::Header#to_binary (/usr/lib/ruby/gems/1.8/gems/amqp-0.6.5/lib/amqp/protocol.rb:122}  /usr/lib/ruby/gems/1.8/gems/amqp-0.6.5/lib/amqp/protocol.rb:122
+                      0.04      0.04      0.00      0.00      10000/30000     AMQP::Buffer#rewind
+                      0.01      0.01      0.00      0.00      10000/20000     <Class::AMQP::Protocol::Class>#id
+                      6.24      0.58      0.00      5.66     40000/140000     AMQP::Buffer#write
+                      1.72      0.62      0.00      1.10      10000/10000     Array#map
+                      0.02      0.02      0.00      0.00      10000/10000     <Class::AMQP::Protocol::Class>#properties
+                      0.07      0.02      0.00      0.05      10000/30000     Class#new
+
+}}}
