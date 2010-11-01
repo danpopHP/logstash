@@ -6,6 +6,9 @@ The ruby amqp library spends a lot of time serializing messages. ruby-prof
 output below comparing hash.to_json with a simple 'publish' serialization. The
 real problem is in AMQP::Buffer, I think.
 
+This should be an easy problem to fix as the AMQP Protocol#to_binary shouldn't
+need to use the  "string io" pattern just to produce the AMQP wire protocol.
+
 {{{
 Thread ID: 70059657652660
 Total Time: 15.22
