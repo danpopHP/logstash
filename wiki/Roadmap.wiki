@@ -12,7 +12,7 @@ Feature goals
   * Outputs: stdout, amqp, stomp, tcp, syslog, mongodb, elasticsearch, websockets
   * A default search web interface - elasticsearch only (for 1.0)
   * Basic real-time search web interface through websockets.
-  * Be stable with 10k events/sec going through the system of file input -> amqp -> elasticsearch on reasonably-modern hardware.
+  * Be stable with 10k events/sec going through the system of file input -> amqp -> elasticsearch on reasonably-modern hardware. See [KnownPerformanceIssues]
 
 Supported configurations:
   * standalone: local files through to elasticsearch
