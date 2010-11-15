@@ -1,20 +1,37 @@
 #summary The roadmap of Doom!
 #labels roadmap
 
-
 = Roadmap for 1.0 =
 
 Feature goals
-  * Fully-supported pipe metaphor: inputs, filters, outputs.
-  * Inputs: file, exec, amqp, stomp, syslog, tcp
+  * _DONE_ Fully-supported pipe metaphor: inputs, filters, outputs.
+  * Inputs: 
+    * _DONE_ file
+    * exec
+    * _DONE_ amqp
+    * stomp
+    * syslog
+    * tcp
   * Input variations: file+json, etc. (will be filters)
-  * Filters: grok, time parsing, something grep-like, something sed-like, json
-  * Outputs: stdout, amqp, stomp, tcp, syslog, mongodb, elasticsearch, websockets
+  * Filters
+    * _DONE_ grok
+    * something grep-like
+    * something sed-like
+    * json
+  * Outputs
+    * _DONE_ stdout
+    * _DONE_ amqp
+    * stomp
+    * tcp
+    * syslog
+    * _DONE_ mongodb
+    * _DONE_ elasticsearch
+    * _DONE_ websockets
   * A default search web interface - elasticsearch only (for 1.0)
   * Basic real-time search web interface through websockets.
   * Be stable with 10k events/sec going through the system of file input -> amqp -> elasticsearch on reasonably-modern hardware. See [KnownPerformanceIssues]
 
-Supported configurations:
+Supported/documented configurations:
   * standalone: local files through to elasticsearch
   * piped: local files to amqp, amqp to a filter to amqp, amqp to elasticsearch
 
@@ -24,14 +41,13 @@ Code quality
   * Agent must have tests.
 
 Documentation goals
-  * ElasticSearch should be automatically configured by logstash.
+  * ElasticSearch indexes, etc, should be automatically configured by logstash.
   * Configuration: tags, inputs, outputs, filters, etc.
   * Document how to configure elasticsearch. Indexing, sharding, mapping, etc.
   * Document best practices
   * Consistent terminology ("input", "output", "event", "filter", etc).
 
-
 = 2.0 ideas =
 
-* Multi-line file support
+* Multi-line file support (will be a stateful filter)
 * "nearby" log event query (i.e. find events near a stacktrace)
