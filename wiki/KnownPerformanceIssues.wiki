@@ -42,3 +42,12 @@ Total Time: 15.22
                       0.07      0.02      0.00      0.05      10000/30000     Class#new
 
 }}}
+
+= ElasticSearch REST API for Indexing =
+
+Sending 1 http request per log message isn't very scalable. ElasticSearch
+supports alternatives: bulk api and rivers.
+
+We chose to use the river approach since we already support AMQP. We
+configure ElasticSearch with a river that uses an AMQP message queue
+for the source of data to index.
