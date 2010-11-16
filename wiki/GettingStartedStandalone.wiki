@@ -44,6 +44,17 @@ Call this file 'logstash.yaml' (or anything, really), and run: `logstash -f logs
 
 == logstash web interface ==
 
-Since this is standalone, on the same machine, run the logstash web interface:
+Since this is standalone, on the same machine, run the logstash web interface
+on that same system.
 
-...
+To run the logstash web server, just run 'logstash-web' (ships with the
+logstash gem). You should see output something like this:
+
+{{{
+% logstash-web
+>> Thin web server (v1.2.7 codename No Hup)
+>> Maximum connections set to 1024
+>> Listening on 0.0.0.0:9292, CTRL+C to stop
+}}}
+
+Just point your browser at the http://yourserver:9292/ and start searching logs!
