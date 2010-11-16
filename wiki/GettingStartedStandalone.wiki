@@ -6,24 +6,48 @@
 This guide shows how to get you going quickly with logstash on a single, standalone server collecting its own logs. By standalone, I mean that everything happens on a single server: log collection, indexing, and the web interface.
 
 You'll want to download a few things:
-   * gem install logstash -v '>= 0.1.507'
+   * Install logstash (rubygems, see below)
    * Download elasticsearch - http://www.elasticsearch.com/download/ (Requires elasticsearch 0.12.1 or newer)
 
 == ElasticSearch ==
 
-Unpack the elasticsearch. To start the service, run bin/elasticsearch. If you want to run it in the foreground, use 'bin/elasticsearch -f'
+Paste this in your shell for easy downloadings.
 
-No other configuration of elasticsearch is required. If you want to keep elasticsearch's data directory somewhere else, make a symlink for 'work' pointing somewhere. "work" is in the base of the elasticsearch directory.
+{{{
+ES_PACKAGE=elasticsearch-0.12.1.zip
+ES_DIR=${ES_PACKAGE%%.zip}
+if [ ! -d "$ES_DIR" ] ; then
+  wget --no-check-certificate http://github.com/downloads/elasticsearch/elasticsearch/$ES_PACKAGE
+  unzip $ES_PACKAGE
+fi
+}}}
+
+Otherwise - Download and unpack the elasticsearch yourself. It's written in
+Java and requires Java (uses Lucene on the backend; if you want to know more
+read the elasticsearch docs).
+
+To start the service, run bin/elasticsearch. If you want to run it in the
+foreground, use 'bin/elasticsearch -f' 
 
 == logstash ==
 
 Once you have elasticsearch running, you're ready to configure logstash.
 
-Note: If you did 'gem install logstash' you should have a 'logstash' tool in your path, if not, check the output of 'gem env' and look for the path listed as "EXECUTABLE DIRECTORY".
+Installing logstash via rubygems:
+{{{
+gem install logstash -v 0.1.507
+}}}
 
-The configuration of any logstash agent consists of specifying inputs, filters, and outputs. For this example, we will not configure any filters.
+Note: If you did 'gem install logstash' you should have a 'logstash' tool in
+your path, if not, check the output of 'gem env' and look for the path listed
+as "EXECUTABLE DIRECTORY".
 
-The inputs are your log files. The output will be elasticsearch. The config format is YAML.
+The configuration of any logstash agent consists of specifying inputs, filters,
+and outputs. For this example, we will not configure any filters.
+
+The inputs are your log files. The output will be elasticsearch. The config
+format is YAML. The bottom of this document includes links for further reading
+(config, etc) if you want to learn more.
 
 {{{
 inputs:
@@ -42,7 +66,11 @@ outputs:
 - elasticsearch://localhost:9200/logstash/logs
 }}}
 
-Call this file 'logstash.yaml' (or anything, really), and run: `logstash -f logstash.yaml`
+Call this file 'logstash.yaml' (or anything, really), and run: 
+
+{{{
+logstash -f logstash.yaml
+}}}
 
 == logstash web interface ==
 
@@ -59,4 +87,5 @@ logstash gem). You should see output something like this:
 >> Listening on 0.0.0.0:9292, CTRL+C to stop
 }}}
 
-Just point your browser at the http://yourserver:9292/ and start searching logs!
+Just point your browser at the http://yourserver:9292/ and start searching
+logs!
