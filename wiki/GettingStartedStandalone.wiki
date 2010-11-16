@@ -6,12 +6,14 @@
 This guide shows how to get you going quickly with logstash on a single, standalone server collecting its own logs. By standalone, I mean that everything happens on a single server: log collection, indexing, and the web interface.
 
 You'll want to download a few things:
-   * gem install logstash (You want version 0.1.500 or newer)
+   * gem install logstash (You want version 0.1.504 or newer)
    * Download elasticsearch - http://www.elasticsearch.com/download/ (Requires elasticsearch 0.12.1 or newer)
 
 == ElasticSearch ==
 
-Unpack the elasticsearch. To start the service, run bin/elasticsearch. If you want to run it in the foreground, use 'bin/elasticsearch -f' 
+Unpack the elasticsearch. To start the service, run bin/elasticsearch. If you want to run it in the foreground, use 'bin/elasticsearch -f'
+
+No other configuration of elasticsearch is required. If you want to keep elasticsearch's data directory somewhere else, make a symlink for 'work' pointing somewhere. "work" is in the base of the elasticsearch directory.
 
 == logstash ==
 
