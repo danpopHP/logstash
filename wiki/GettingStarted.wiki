@@ -6,8 +6,8 @@
 This guide shows how to get you going quickly with logstash on a single, standalone server collecting its own logs.
 
 You'll want to download a few things:
-* gem install logstash
-* Download elasticsearch - http://www.elasticsearch.com/download/ (Requires elasticsearch 0.12.1 or newer)
+   * gem install logstash
+   * Download elasticsearch - http://www.elasticsearch.com/download/ (Requires elasticsearch 0.12.1 or newer)
 
 == ElasticSearch ==
 
