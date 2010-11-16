@@ -49,6 +49,9 @@ The inputs are your log files. The output will be elasticsearch. The config
 format is YAML. The bottom of this document includes links for further reading
 (config, etc) if you want to learn more.
 
+Here is a sample config you can start with. It defines some basic inputs
+grouped by type and two outputs.
+
 {{{
 inputs:
   syslog: # each input must have a type, the type can be anything.
@@ -66,7 +69,7 @@ outputs:
 - elasticsearch://localhost:9200/logstash/logs
 }}}
 
-Call this file 'logstash.yaml' (or anything, really), and run: 
+Put this in a file and call it 'logstash.yaml' (or anything, really), and run: 
 
 {{{
 logstash -f logstash.yaml
