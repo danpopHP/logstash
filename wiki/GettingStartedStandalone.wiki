@@ -40,7 +40,7 @@ Once you have elasticsearch running, you're ready to configure logstash.
 
 Installing logstash via rubygems:
 {{{
-gem install logstash -v 0.1.516
+gem install logstash -v 0.1.523
 }}}
 
 Note: If you did 'gem install logstash' you should have a 'logstash' tool in
