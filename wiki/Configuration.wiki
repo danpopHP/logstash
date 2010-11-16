@@ -1,8 +1,45 @@
 #summary logstash configuration
 
+= Table of Contents =
+
 <wiki:toc max_depth="1" />
 
 = Introduction =
+
+The logstash config format is currently YAML. The basic structure of your
+config will look like this:
+
+{{{
+inputs:
+  < one or more inputs >
+filters:
+  < one or more filters >
+outputs:
+ < one or more outputs >
+}}}
+
+Filters are optional. If you don't need any filters in an agent, you can omit
+the 'filters' section.
+
+Inputs and filters use 'types' as an additional attribute. The 'type' should be
+something semantically meaningful. A filter will only act on events that have
+the same type as configured.
+
+{{{
+inputs:
+  syslog:   # Define the 'syslog' type
+  - /var/log/messages
+filters:
+- date:
+    syslog:  # For 'syslog' type events, use the following date parsing...
+      fieldname: "%Y/%m/%d %H:%M%S %Z"
+}}}
+
+*NOTE:* Inputs will only set the type for an event if there is no type already
+set. For example, if an event received using the amqp input already has a type,
+the type you gave to the amqp input it will be ignored and the previous value
+kept. This ensures events that travel file to amqp to filter to elastic will
+keep the original type through the entire pipeline.
 
 = Inputs =
 
