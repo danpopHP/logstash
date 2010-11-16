@@ -159,14 +159,14 @@ filters:
       epochtime: %s
 outputs:
 - stdout:///
-- "elasticsearch://localhost:9200/logstash/all_river?method=river&type=rabbitmq&host=activemq&user=guest&pass=guest&vhost=/&queue=es"
+- "elasticsearch://localhost:9200/logstash/all_river?method=river&type=rabbitmq&host=myrabbitmqserver.example.com&user=guest&pass=guest&vhost=/&queue=es"
 }}}
 
 The long elasticsearch url above uses a feature of elasticsearch called a
-'river' - read more about the elasticsearch output over on the [Configuration]
-docs. The above configures elasticsearch to listen on a specific AMQP message
-queue for events to index. logstash will ship output to this message queue
-as events come in and are parsed.
+'river' - read more about the elasticsearch output configuration over on the
+[Configuration] docs. The above configures elasticsearch to listen on a
+specific AMQP message queue for events to index. logstash will ship output to
+this message queue as events come in and are parsed.
 
 == logstash web interface ==
 
