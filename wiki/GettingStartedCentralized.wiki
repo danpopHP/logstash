@@ -1,0 +1,180 @@
+#summary Short introduction and basic config to get you going on multiple servers
+#labels intro,logstash,standalone,elasticsearch
+
+= Introduction - Centralized Setup with Parsing =
+
+This guide shows how to get you going quickly with logstash with multiple servers.
+This guide is for folks who want to ship all their logstash logs to a central location
+for indexing and search.
+
+Steps:
+   * Download and run elasticsearch
+   * Download and run an AMQP broker
+   * Download and install grok (library) and jls-grok (rubygems)
+   * Download and run logstash
+
+== ElasticSearch ==
+
+Paste this in your shell for easy downloadings.
+
+{{{
+ES_PACKAGE=elasticsearch-0.12.1.zip
+ES_DIR=${ES_PACKAGE%%.zip}
+if [ ! -d "$ES_DIR" ] ; then
+  wget --no-check-certificate http://github.com/downloads/elasticsearch/elasticsearch/$ES_PACKAGE
+  unzip $ES_PACKAGE
+fi
+}}}
+
+Otherwise - Download and unpack the elasticsearch yourself; you'll want version
+0.12.1 or newer. It's written in Java and requires Java (uses Lucene on the
+backend; if you want to know more read the elasticsearch docs).
+
+To start the service, run bin/elasticsearch. If you want to run it in the
+foreground, use 'bin/elasticsearch -f' 
+
+== AMQP Broker ==
+
+AMQP is a standard for message-based communication. It supports publish-subscribe, queues, etc. 
+AMQP is currently the best supported way to ship your logs between servers with logstash.
+
+If you don't know what AMQP is, that's fine, you don't need to know anything
+about it for this config. If you already have an AMQP server and know how to configure it, you
+can skip this section.
+
+If you don't have an AMQP server already, you might as well download [rabbitmq http://www.rabbitmq.com/server.html]
+I recommend using the native packages (rpm, deb) if those are for your system.
+
+Configuring RabbitMQ is out of scope for this doc, but know that if use the RPM
+or Deb package you'll probably end up with a rabbitmq startup script that you
+can just start and you'll be ready to go to the next section.
+
+If you want/need to configure RabbitMQ, seek the rabbitmq docs.
+
+== grok ==
+
+Site for download and install docs: http://code.google.com/p/semicomplete/wiki/Grok
+
+You'll need to install grok. If you're on Ubuntu 10.04 64bit, you can use this
+[ubuntu package
+http://code.google.com/p/semicomplete/downloads/detail?name=grok_1.20101030.3088_amd64.deb&can=2&q=]
+
+See http://code.google.com/p/semicomplete/source/browse/grok/INSTALL for
+further installation instructions and dependency information
+
+Once you have grok installed, you need to install the 'jls-grok' rubygem, which you can do by running:
+
+{{{
+gem install jls-grok
+}}}
+ 
+== logstash ==
+
+Once you have elasticsearch and rabbitmq (or any AMQP server) running, you're
+ready to configure logstash.
+
+Installing logstash via rubygems:
+{{{
+gem install logstash -v 0.1.516
+}}}
+
+Note: If you did 'gem install logstash' you should have a 'logstash' tool in
+your path, if not, check the output of 'gem env' and look for the path listed
+as "EXECUTABLE DIRECTORY".
+
+Since we're doing a centralized configuration, you'll have two main logstash
+agents: a shipper and an indexer. You will ship logs from all servers
+to a single AMQP message queue and have another agent receive those messages,
+parse them, and index them in elasticsearch.
+
+=== logstash log shipper ===
+
+This agent you will run on all of your servers you want to collect logs on.
+Here's a good sample config:
+
+{{{
+inputs:
+  syslog: # each input must have a type, the type can be anything.
+  - /var/log/messages
+  - /var/log/syslog
+  # Wildcards work.
+  - /var/log/*.log
+  apache-access:
+  - /var/log/apache2/access.log
+  apache-error:
+  - /var/log/apache2/error.log
+
+outputs:
+- stdout:///   # output events to stdout for debugging, remove if you don't want
+- amqp://youramqpserver/fanout/rawlogs   # ship logs to the 'rawlogs' fanout queue.
+}}}
+
+Put this in a file and call it 'logstash.yaml' (or anything, really), and run: 
+
+{{{
+logstash -f logstash.yaml
+}}}
+
+This should start tailing the file inputs specified above and ships them out over amqp.
+
+=== logstash indexer ===
+
+This agent will parse and index your logs as they come in over AMQP. Here's a sample
+config based on the previous section.
+
+We'll use grok to parse some logs. Grok is a filter in logstash. Additionally, after
+we parse with grok, we want to take any timestamps found in the log and parse them
+to use as the real timestamp value for the event.
+
+{{{
+inputs:
+- amqp://youramqpserver/fanout/rawlogs   # ship logs to the 'rawlogs' fanout queue.
+filters:
+- grok:
+    syslog: # for logs of type 'linux-syslog'
+      patterns:
+      - %{SYSLOGLINE}
+    apache-access: # for logs of type 'apache-error'
+      patterns:
+      - %{COMBINEDAPACHELOG}
+    nagios:
+      patterns:
+      - %{NAGIOSLOGLINE}
+- date:
+    syslog:  # for logs of type 'linux-syslog'
+      # Look for a field 'timestamp' with this format, parse and it for the timestamp
+      # This field comes from the SYSLOGLINE pattern
+      timestamp: "%b %e %H:%M:%S"
+      timestamp8601: ISO8601
+    apache-access:
+      timestamp: "%d/%b/%Y:%H:%M:%S %Z"
+    nagios:
+      # nagios uses unix epoch time in seconds, so parse it
+      epochtime: %s
+outputs:
+- stdout:///
+- "elasticsearch://localhost:9200/logstash/all_river?method=river&type=rabbitmq&host=activemq&user=guest&pass=guest&vhost=/&queue=es"
+}}}
+
+The long elasticsearch url above uses a feature of elasticsearch called a
+'river' - read more about the elasticsearch output over on the [Configuration]
+docs. The above configures elasticsearch to listen on a specific AMQP message
+queue for events to index. logstash will ship output to this message queue
+as events come in and are parsed.
+
+== logstash web interface ==
+
+Run this on the same server as your elasticsearch server.
+
+To run the logstash web server, just run 'logstash-web' (ships with the
+logstash gem). You should see output something like this:
+
+{{{
+% logstash-web
+>> Thin web server (v1.2.7 codename No Hup)
+>> Maximum connections set to 1024
+>> Listening on 0.0.0.0:9292, CTRL+C to stop
+}}}
+
+Just point your browser at the http://yourserver:9292/ and start searching
+logs!
