@@ -1,0 +1,54 @@
+#summary logstash configuration
+
+= Introduction =
+
+= Inputs =
+
+= Filters =
+
+= Outputs =
+
+== AMQP ==
+
+Example: amqp://server:port/fanout/somequeue
+
+AMQP output sends events to an AMQP message broker. You have 3 choices of message queues: topic, fanout, or queue. A topic is a pubsub broadcast-type of messaging. Fanout is  round-robin messaging. A queue is 1:1 messaging.
+
+Example servers that support AMQP include: RabbitMQ, ActiveMQ, QPid.
+
+AMQP is a great way to send events around from input collectors (file inputs) to event indexers (elasticsearch output).
+
+== stdout ==
+
+Example: stdout:///
+
+stdout is useful for outputting events you receive if you need to debug events or want to use an agent that streams events from other inputs (files, amqp, etc)
+
+== ElasticSearch ==
+
+Example: elasticsearch://server:port/logstash/events
+
+ElasticSearch is the best way to store your logstash events for later searching.
+
+Using the example url above will use the REST API supported by ElasticSearch. This is an easy start to using ElasticSearch, but doesn't scale beyond a few thousand qps (mostly due to current code features in logstash and use of em-http-request).
+
+=== Scaling ElasticSearch ===
+
+If you want to scale better, you should use elasticsearch "river". This tells elasticsearch to read indexing inputs from an AMQP message queue and should scale better than the REST API. To use this, you should use something like this as your output:
+
+To use this river, you'll have to install the rabbitmq-river plugin for elasticsearch. This is easy; from the elasticsearch install directory, run:
+
+{{{
+bin/plugin -install river-rabbitmq
+}}}
+
+It's called 'river-rabbitmq' but I'm pretty sure it is AMQP not specific to rabbitmq.
+
+Example URL: elasticsearch://localhost:9200/logstash/events?method=river&type=rabbitmq&host=AMQPHOST&user=guest&pass=guest&vhost=/&queue=es
+
+The url parameters are pretty straight forward, the ones you care about are:
+* host - the hostname of the AMQP broker
+* user - the amqp user
+* pass - the amqp password
+* vhost - the amqp vhost (if you don't know what this is, use '/')
+* queue - the queue to write to
