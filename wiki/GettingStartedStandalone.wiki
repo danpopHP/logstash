@@ -5,9 +5,9 @@
 
 This guide shows how to get you going quickly with logstash on a single, standalone server collecting its own logs. By standalone, I mean that everything happens on a single server: log collection, indexing, and the web interface.
 
-You'll want to download a few things:
-   * Install logstash (rubygems, see below)
-   * Download elasticsearch - http://www.elasticsearch.com/download/ (Requires elasticsearch 0.12.1 or newer)
+Steps:
+   * Download and run elasticsearch
+   * Download and run logstash
 
 == ElasticSearch ==
 
@@ -22,9 +22,9 @@ if [ ! -d "$ES_DIR" ] ; then
 fi
 }}}
 
-Otherwise - Download and unpack the elasticsearch yourself. It's written in
-Java and requires Java (uses Lucene on the backend; if you want to know more
-read the elasticsearch docs).
+Otherwise - Download and unpack the elasticsearch yourself; you'll want version
+0.12.1 or newer. It's written in Java and requires Java (uses Lucene on the
+backend; if you want to know more read the elasticsearch docs).
 
 To start the service, run bin/elasticsearch. If you want to run it in the
 foreground, use 'bin/elasticsearch -f' 
