@@ -1,9 +1,9 @@
 #summary Short introduction and basic config to get you going
 #labels intro,logstash,standalone,elasticsearch
 
-= Introduction =
+= Introduction - Standalone Setup =
 
-This guide shows how to get you going quickly with logstash on a single, standalone server collecting its own logs.
+This guide shows how to get you going quickly with logstash on a single, standalone server collecting its own logs. By standalone, I mean that everything happens on a single server: log collection, indexing, and the web interface.
 
 You'll want to download a few things:
    * gem install logstash
