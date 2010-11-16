@@ -97,3 +97,7 @@ logstash gem). You should see output something like this:
 
 Just point your browser at the http://yourserver:9292/ and start searching
 logs!
+
+= What next? =
+
+This is just an example of using logstash all by itself with all components on the same server. You can easily collect logs from all of your servers into elasticsearch; read more about that on [GettingStartedCentralized]
