@@ -1,0 +1,49 @@
+#summary Short introduction and basic config to get you going
+#labels intro,logstash,standalone,elasticsearch
+
+= Introduction =
+
+This guide shows how to get you going quickly with logstash on a single, standalone server collecting its own logs.
+
+You'll want to download a few things:
+* gem install logstash
+* Download elasticsearch - http://www.elasticsearch.com/download/ (Requires elasticsearch 0.12.1 or newer)
+
+== ElasticSearch ==
+
+Unpack the elasticsearch. To start the service, run bin/elasticsearch. If you want to run it in the foreground, use 'bin/elasticsearch -f' 
+
+== logstash ==
+
+Once you have elasticsearch running, you're ready to configure logstash.
+
+Note: If you did 'gem install logstash' you should have a 'logstash' tool in your path, if not, check the output of 'gem env' and look for the path listed as "EXECUTABLE DIRECTORY".
+
+The configuration of any logstash agent consists of specifying inputs, filters, and outputs. For this example, we will not configure any filters.
+
+The inputs are your log files. The output will be elasticsearch. The config format is YAML.
+
+{{{
+inputs:
+  syslog: # each input must have a type, the type can be anything.
+  - /var/log/messages
+  - /var/log/syslog
+  # Wildcards work.
+  - /var/log/*.log
+  apache-access:
+  - /var/log/apache2/access.log
+  apache-error:
+  - /var/log/apache2/error.log
+
+outputs:
+- stdout:///   # output events to stdout for debugging
+- elasticsearch://localhost:9200/logstash/logs
+}}}
+
+Call this file 'logstash.yaml' (or anything, really), and run: `logstash -f logstash.yaml`
+
+== logstash web interface ==
+
+Since this is standalone, on the same machine, run the logstash web interface:
+
+...
