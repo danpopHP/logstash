@@ -7,7 +7,13 @@ This guide shows how to get you going quickly with logstash with multiple server
 This guide is for folks who want to ship all their logstash logs to a central location
 for indexing and search.
 
-Steps:
+We'll have two classes of server. First, one that ships logs. Second, one that collects
+and indexes logs.
+
+On servers shipping logs:
+   * Download and run logstash (See section 'logstash log shipper' below)
+
+On the server collecting and indexing your logs:
    * Download and run elasticsearch
    * Download and run an AMQP broker
    * Download and install grok (library) and jls-grok (rubygems)
