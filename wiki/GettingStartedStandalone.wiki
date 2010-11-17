@@ -1,4 +1,4 @@
-#summary Short introduction and basic config to get you going
+#summary Short introduction and basic config to get you going in a few minutes
 #labels intro,logstash,standalone,elasticsearch
 
 = Introduction - Standalone Setup =
