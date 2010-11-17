@@ -47,7 +47,16 @@ Documentation goals
   * Document best practices
   * Consistent terminology ("input", "output", "event", "filter", etc).
 
-= 2.0 ideas =
+= > 1.0 =
 
-* Multi-line file support (will be a stateful filter)
+(This list is unprioritized)
+
+* Multi-line event support (will be a filter)
+* More grok patterns (java stacktrace, etc)
 * "nearby" log event query (i.e. find events near a stacktrace)
+* Saved queries
+* Customizable reports
+* Schedulable queries
+* Users, accounting, search data protection (hide certain results from some users, etc)
+* Better visuals: More than just histograms on search hits.
+* Suggested field values in a query
