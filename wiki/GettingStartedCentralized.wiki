@@ -167,6 +167,8 @@ filters:
       epochtime: %s
 outputs:
 - stdout:///
+# This elasticsearch 'river' configuration requires you to install the
+# 'river-rabbitmq' plugin. See the Configuration page here for how to do this.
 - "elasticsearch://localhost:9200/logstash/all_river?method=river&type=rabbitmq&host=myrabbitmqserver.example.com&user=guest&pass=guest&vhost=/&queue=es"
 }}}
 
