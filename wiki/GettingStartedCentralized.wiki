@@ -141,7 +141,8 @@ to use as the real timestamp value for the event.
 
 {{{
 inputs:
-- amqp://youramqpserver/fanout/rawlogs   # ship logs to the 'rawlogs' fanout queue.
+  all: # for now, you must specify a type for all inputs
+  - amqp://youramqpserver/fanout/rawlogs   # ship logs to the 'rawlogs' fanout queue.
 filters:
 - grok:
     syslog: # for logs of type 'linux-syslog'
