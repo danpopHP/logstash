@@ -21,6 +21,8 @@ On the server collecting and indexing your logs:
 
 == ElasticSearch ==
 
+Requirements: java
+
 Paste this in your shell for easy downloadings.
 
 {{{

@@ -16,6 +16,8 @@ Steps:
 
 == ElasticSearch ==
 
+Requirements: java
+
 Paste this in your shell for easy downloadings.
 
 {{{
