@@ -65,3 +65,6 @@ Documentation goals
   * Better visuals: More than just histograms on search hits.
   * hit graph with selectable group-by stacking
   * Suggested field values in a query
+  * document how to log directly to logstash
+  * web api
+  * web api aggregates query?
