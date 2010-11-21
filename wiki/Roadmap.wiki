@@ -10,11 +10,12 @@ Feature goals
     * exec
     * _DONE_ amqp
     * stomp
-    * syslog
-    * tcp
+    * _DONE_ syslog
+    * _DONE_ tcp
   * Input variations: file+json, etc. (will be filters)
   * Filters
     * _DONE_ grok
+    * _DONE_ multiline
     * something grep-like
     * something sed-like
     * json
@@ -34,6 +35,7 @@ Feature goals
 Supported/documented configurations:
   * standalone: local files through to elasticsearch
   * piped: local files to amqp, amqp to a filter to amqp, amqp to elasticsearch
+  * document ways to send input (logstash agent, syslog-ng, rsyslog, flume) 
 
 Code quality
   * Logstash agents should be debuggable through logging.
@@ -51,12 +53,13 @@ Documentation goals
 
 (This list is unprioritized)
 
-* Multi-line event support (will be a filter)
-* More grok patterns (java stacktrace, etc)
+* DONE Multi-line event support (will be a filter)
+* DONE More grok patterns (java stacktrace, etc)
 * "nearby" log event query (i.e. find events near a stacktrace)
 * Saved queries
 * Customizable reports
 * Schedulable queries
 * Users, accounting, search data protection (hide certain results from some users, etc)
 * Better visuals: More than just histograms on search hits.
+* hit graph with selectable group-by stacking
 * Suggested field values in a query
