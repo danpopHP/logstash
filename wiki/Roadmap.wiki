@@ -17,8 +17,10 @@ Feature goals
     * _DONE_ grok
     * _DONE_ multiline
     * something grep-like
+    * key value parse
     * something sed-like
     * json
+    * 
   * Outputs
     * _DONE_ stdout
     * _DONE_ amqp
