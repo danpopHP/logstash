@@ -53,13 +53,13 @@ Documentation goals
 
 (This list is unprioritized)
 
-* DONE Multi-line event support (will be a filter)
-* DONE More grok patterns (java stacktrace, etc)
-* "nearby" log event query (i.e. find events near a stacktrace)
-* Saved queries
-* Customizable reports
-* Schedulable queries
-* Users, accounting, search data protection (hide certain results from some users, etc)
-* Better visuals: More than just histograms on search hits.
-* hit graph with selectable group-by stacking
-* Suggested field values in a query
+  * DONE Multi-line event support (will be a filter)
+  * DONE More grok patterns (java stacktrace, etc)
+  * "nearby" log event query (i.e. find events near a stacktrace)
+  * Saved queries
+  * Customizable reports
+  * Schedulable queries
+  * Users, accounting, search data protection (hide certain results from some users, etc)
+  * Better visuals: More than just histograms on search hits.
+  * hit graph with selectable group-by stacking
+  * Suggested field values in a query
