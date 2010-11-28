@@ -51,7 +51,7 @@ Documentation goals
   * Document best practices
   * Consistent terminology ("input", "output", "event", "filter", etc).
 
-= > 1.0 =
+= > 1.0 (or otherwise untargeted) =
 
 (This list is unprioritized)
 
@@ -68,3 +68,20 @@ Documentation goals
   * document how to log directly to logstash
   * web api
   * web api aggregates query?
+
+= Interactive Analytics =
+
+Interactive querying/analytics flow: search, interactively build a
+grok filter based on results, add any other filters (multiline,
+etc), choose output (what kind of graph, what results you want to
+see, what aggregation, etc).
+
+Save-able analytics for later reports, alerting, etc.
+
+= Web UI =
+
+Parts: search, analytics, stream, others?
+
+  * Search: main search interface
+  * Analytics: interactive search/drill/filter/aggregate/graph.
+  * Stream: watch logs in real time through filters.
