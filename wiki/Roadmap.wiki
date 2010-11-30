@@ -108,9 +108,7 @@ to be able to use logstash in whatever way most compliments your
 infrastructure.
 
   * Using flume to ship logs to logstash
-  * Using flume to ship into hdfs and elasticsearch, use logstash's web ui on
-    top of elasticsearch
+  * Using flume to ship into hdfs and elasticsearch, use logstash's web ui on top of elasticsearch
   * Using rsyslog and syslog-ng to ship to logstash
   * Using the logstash agent to ship to graylog2
   * Using the logstash pipe model (input/filter/output) for other tools (hadoop, etc)
-
