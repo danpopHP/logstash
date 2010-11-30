@@ -78,6 +78,17 @@ see, what aggregation, etc).
 
 Save-able analytics for later reports, alerting, etc.
 
+Graphs? Histogram, pie (mmmm, pie.), directed graphs (for tracking RPC and
+session calls), etc.
+
+== "VS" graphs ==
+
+Compare two queries. Use case: comparing monitoring alerts with other logs.
+
+== "BY" graphs ==
+
+Aggregate by field(s). Use case: contrasting HTTP response codes
+
 = Web UI =
 
 Parts: search, analytics, stream, others?
@@ -85,3 +96,21 @@ Parts: search, analytics, stream, others?
   * Search: main search interface
   * Analytics: interactive search/drill/filter/aggregate/graph.
   * Stream: watch logs in real time through filters.
+
+= Interop =
+
+  * Use the agent, or don't.
+  * Use the web ui, or don't.
+  * Use a component, or dont.
+
+Modularity and interoperability is critical. Logstash isn't a silo. I want you
+to be able to use logstash in whatever way most compliments your
+infrastructure.
+
+  * Using flume to ship logs to logstash
+  * Using flume to ship into hdfs and elasticsearch, use logstash's web ui on
+    top of elasticsearch
+  * Using rsyslog and syslog-ng to ship to logstash
+  * Using the logstash agent to ship to graylog2
+  * Using the logstash pipe model (input/filter/output) for other tools (hadoop, etc)
+
