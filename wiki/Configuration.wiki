@@ -54,7 +54,7 @@ example, if it includes a timestamp or date), you can just include globs.
 
 Currently, events are determined as file data delimited by a newline.
 
-Multiline logs will be supported later. If you want this sooner, email the mailing list :)
+Multiline logs are supported by a filter.
 
 == AMQP ==
 
@@ -122,6 +122,45 @@ Example config:
 The formats supported are "ISO8601" literally (see above) or any valid strftime
 format. The 'key' in the configs above (timestamp, epochtime, etc) are fields from
 your event that will be used to try and parse a time.
+
+== multiline ==
+
+The multiline filter keeps state on events flowing through and merges things
+that are part of multiline events.
+
+Example config:
+{{{
+filters:
+- multiline:
+  somejavalogs:
+    pattern: ^\s
+    what: previous
+}}}
+
+Above, 'somejavalogs' is the type (same as the input 'type'). This example
+would capture common multiline java logs (like stack traces) that indicate
+continuation by prefixing the line with whitespace (tabs, spaces, etc). The
+value 'pattern' is a regexp.  The value 'what' must be either "previous" or
+"next."
+
+A 'what' value of "previous" means that if the pattern matches, the event
+matched is assumed to be a part of the previous event and is merged in. A
+'what' value of "next" means that if the pattern matches, the event matched is
+assumed to be part of a multiline event that continues onto the next event.
+
+This filter is stateful and keys on the event source (url) and the event type, so
+the filter can safely distinguish multiline events from different sources and
+different types.
+
+CAVEAT: You should be aware that AMQP messages do not have guaranteed ordering
+or receivers. This means basically that you should not use the multiline filter
+on an input that is amqp. I recommend using another input like syslog, or file,
+then applying the multiline filter.
+
+BONUS: Since filters are ordered, you can apply multiline *after* grok, and get
+some nice results: Grok would parse each line (say, a part of a stack trace),
+and multiline would merge them together, giving you a nicely parsed event that
+contains the stack trace and each line and function involved.
 
 = Outputs =
 
