@@ -1,5 +1,7 @@
 #summary Currently known performance problems
 
+<wiki:toc max_depth="1" />
+
 = Ruby AMQP =
 
 The ruby amqp library spends a lot of time serializing messages. ruby-prof
@@ -51,3 +53,9 @@ supports alternatives: bulk api and rivers.
 We chose to use the river approach since we already support AMQP. We
 configure ElasticSearch with a river that uses an AMQP message queue
 for the source of data to index.
+
+= Multiprocess support =
+
+Logstash is currently a single process and single-threaded. Grok and other filters are pretty expensive on CPU, so it's worth making logstash support multiple cores to take advantage of it.
+
+Caveat: The multiline filter is stateful. Need to be careful about how this is implemented.
