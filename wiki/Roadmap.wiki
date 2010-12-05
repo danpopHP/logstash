@@ -62,7 +62,7 @@ Documentation goals
   * Plan for handling input/filter/output as plugins
   * Make 'logstash' gem thin
   * Make 'logstash-all' gem heavy
-  * Make 'logstash-{input,filter,output}-<name>' gems
+  * Make 'logstash-{input,filter,output}-somename' gems
   * Work on CentOS5 support (host ruby 1.8.7 and other packages somewhere)
 
 = > 1.0 (or otherwise untargeted) =
