@@ -51,6 +51,15 @@ Documentation goals
   * Document best practices
   * Consistent terminology ("input", "output", "event", "filter", etc).
 
+= 2010/12/10 =
+
+* beanstalk input+output
+* stomp input+output
+* nagios output (to a volatile service)
+* nagios input (global or otherwise, event handler -> logstash)
+* aggregates prototype
+* search analytics prototype (search -> filters -> {results, graph})
+
 = > 1.0 (or otherwise untargeted) =
 
 (This list is unprioritized)
