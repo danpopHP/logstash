@@ -59,6 +59,11 @@ Documentation goals
   * nagios input (global or otherwise, event handler -> logstash)
   * aggregates prototype
   * search analytics prototype (search -> filters -> {results, graph})
+  * Plan for handling input/filter/output as plugins
+  * Make 'logstash' gem thin
+  * Make 'logstash-all' gem heavy
+  * Make 'logstash-{input,filter,output}-<name>' gems
+  * Work on CentOS5 support (host ruby 1.8.7 and other packages somewhere)
 
 = > 1.0 (or otherwise untargeted) =
 
