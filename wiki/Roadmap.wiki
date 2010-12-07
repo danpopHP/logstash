@@ -64,6 +64,7 @@ Documentation goals
   * Make 'logstash-all' gem heavy
   * Make 'logstash-{input,filter,output}-somename' gems
   * Work on CentOS5 support (host ruby 1.8.7 and other packages somewhere)
+  * Daemonizing for logstash and logstash-web
 
 = > 1.0 (or otherwise untargeted) =
 
