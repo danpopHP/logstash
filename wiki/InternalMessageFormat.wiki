@@ -1,0 +1,36 @@
+#summary logstash's internal message format
+
+= logstash internal message format =
+
+logstash uses json, for now, internally for all message shipping. It looks like this:
+
+If you're using ruby, you can play with the LogStash::Event class.
+
+{{{
+{
+  "@timestamp": "2010-12-21T21:48:33.309258Z",
+  "@tags": [ "array", "of", "tags" ],
+  "@type": "string",
+  "@source": "source of the event, usually a URL."
+  "@fields":{
+    # a set of fields for this event
+    "user": "jordan",
+    "command": "shutdown -r":
+  } 
+  "@message": "the original plain-text message"
+} 
+}}}
+
+Example:
+
+{{{
+% irb -rubygems
+>> require "logstash/event"
+>> e = LogStash::Event.new
+>> e.message = "hello world"
+>> e.fields["user"] = "jordan"
+>> e.tags << "mytag"
+>> e.source = "file:///var/log/messages"
+>> puts e.to_json
+{"@timestamp":"2010-12-21T22:18:10.676760Z","@tags":["mytag"],"@type":null,"@source":"file:///var/log/messages","@fields":{"user":"jordan"},"@message":"hello world"}
+}}}
