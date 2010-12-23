@@ -51,20 +51,24 @@ Documentation goals
   * Document best practices
   * Consistent terminology ("input", "output", "event", "filter", etc).
 
-= 2010/12/10 =
+= Christmas Hackfest =
+
+  * Mega testing work - all inputs, filters, and outputs need testing.
+  * Web interface testing
+
+Other todos:
 
   * beanstalk input+output
   * stomp input+output
-  * nagios output (to a volatile service)
+  * nagios output (to a passive service)  
   * nagios input (global or otherwise, event handler -> logstash)
-  * aggregates prototype
   * search analytics prototype (search -> filters -> {results, graph})
   * Plan for handling input/filter/output as plugins
-  * Make 'logstash' gem thin
-  * Make 'logstash-all' gem heavy
+  * Make 'logstash' gem thin ?
+  * Make 'logstash-all' gem heavy ?
   * Make 'logstash-{input,filter,output}-somename' gems
   * Work on CentOS5 support (host ruby 1.8.7 and other packages somewhere)
-  * Daemonizing for logstash and logstash-web
+  * DONE - Daemonizing for logstash and logstash-web
 
 = > 1.0 (or otherwise untargeted) =
 
