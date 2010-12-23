@@ -55,6 +55,8 @@ Documentation goals
 
   * Mega testing work - all inputs, filters, and outputs need testing.
   * Web interface testing
+  * Debug flags.
+  * Pick a non-yaml config language.
 
 Other todos:
 
