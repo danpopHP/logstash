@@ -3,6 +3,12 @@
 
 = Roadmap for 1.0 =
 
+Overall priorities for 1.0: quality and stability before features
+
+  * If it's a feature, it's likely to be deferred.
+  * If it's a destabilizing change, I want it to happen before 1.0.
+  * If it's a piece of code, I want tests for it before 1.0.
+
 Feature goals
   * _DONE_ Fully-supported pipe metaphor: inputs, filters, outputs.
   * Inputs: 
