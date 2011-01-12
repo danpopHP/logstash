@@ -185,7 +185,7 @@ stdout is useful for outputting events you receive if you need to debug events
 or want to use an agent that streams events from other inputs (files, amqp,
 etc)
 
-== ElasticSearch ==
+== elasticsearch ==
 
 Example: elasticsearch://server:port/logstash/events
 
