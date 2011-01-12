@@ -74,7 +74,28 @@ Listens for syslog input on both TCP and UDP. It tries to obey RFC3164 where rea
 This is useful if you don't want to run a logstash agent on your other servers but already
 have a syslog server capable of shipping logs out to other syslog servers.
 
+== stdin ==
+
+Example: stdin:///
+
+This is useful for reading events via stdin.
+
+== stomp ==
+
+TBD
+
+== beanstalk ==
+
+TBD
+== tcp ==
+
+TBD
+== twitter ==
+
+TBD
+
 = Filters =
+
 
 == grok ==
 
