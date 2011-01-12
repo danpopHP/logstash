@@ -132,9 +132,9 @@ Example config:
 {{{
 filters:
 - multiline:
-  somejavalogs:
-    pattern: ^\s
-    what: previous
+    somejavalogs:
+      pattern: ^\s
+      what: previous
 }}}
 
 Above, 'somejavalogs' is the type (same as the input 'type'). This example
@@ -195,6 +195,8 @@ Using the example url above will use the REST API supported by ElasticSearch.
 This is an easy start to using ElasticSearch, but doesn't scale beyond a few
 thousand qps (mostly due to current code features in logstash and use of
 em-http-request).
+
+We recommend running elasticsearch with a high file ulimit, such as ulimit -n 60000; the default on many linux systems is 1024 and is insufficient. ElasticSearch needs higher file descriptor limits because each shard ends up as a file that ES holds an open file handle on.
 
 === Scaling ElasticSearch ===
 
