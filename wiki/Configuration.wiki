@@ -162,6 +162,45 @@ some nice results: Grok would parse each line (say, a part of a stack trace),
 and multiline would merge them together, giving you a nicely parsed event that
 contains the stack trace and each line and function involved.
 
+== grep ==
+
+The grep filter lets you:
+
+  * drop matching events
+  * tag matching events
+  * add fields
+
+{{{
+filters:
+- grep:
+    syslog:
+    - match:
+        fieldname: fieldvalue as a regexp
+      add_fields:
+        field_to_add: fieldvalue
+      add_tags:
+        - tag1
+        - tag2
+      negate: true
+}}}
+
+'match' is required. 'add_fields' and 'add_tags' are optional. 'negate' is
+optional and defaults to false.
+
+A message not matching this filter will be dropped. If you only want to use
+grep to tag certain messages, but allow all messages through, you must have a
+catch-all 'match' pattern that matches everything.
+
+If you want to drop matching events, for example, you can use negate:
+
+{{{
+- grep:
+    foo:
+    - match:
+        message: something to match and drop
+      negate: true
+}}}
+
 = Outputs =
 
 == AMQP ==
