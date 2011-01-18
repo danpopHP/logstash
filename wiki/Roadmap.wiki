@@ -15,27 +15,29 @@ Feature goals
     * _DONE_ file
     * exec
     * _DONE_ amqp
-    * stomp
+    * _DONE_ stomp
     * _DONE_ syslog
     * _DONE_ tcp
   * Input variations: file+json, etc. (will be filters)
   * Filters
     * _DONE_ grok
     * _DONE_ multiline
-    * something grep-like
+    * _DONE_ something grep-like
     * key value parse
     * something sed-like
     * json
-    * 
   * Outputs
-    * _DONE_ stdout
     * _DONE_ amqp
-    * stomp
-    * tcp
-    * syslog
-    * _DONE_ mongodb
+    * _DONE_ beanstalk
     * _DONE_ elasticsearch
+    * _DONE_ graylog2
+    * _DONE_ mongodb
+    * _DONE_ nagios
+    * _DONE_ stdout
+    * _DONE_ stomp
+    * _DONE_ tcp (needs specification)
     * _DONE_ websockets
+    * syslog
   * A default search web interface - elasticsearch only (for 1.0)
   * Basic real-time search web interface through websockets.
   * Be stable with 10k events/sec going through the system of file input -> amqp -> elasticsearch on reasonably-modern hardware. See [KnownPerformanceIssues]
