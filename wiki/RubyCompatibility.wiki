@@ -1,0 +1,8 @@
+#summary ruby compatibility
+
+Ruby changes pretty wildly between versions. Here's a table of support.
+
+|| Ruby || Component || Works? ||
+|| Ruby 1.8.6 || date filter || Not yet. DateTime.parse does not parse ISO8601 times ||
+|| Ruby 1.8.7 || date filter || Yes. Tests pass. ||
+|| Ruby 1.9.2 || date filter || Not yet. DateTime.sec_fraction means something different than it did in 1.8.7. ||

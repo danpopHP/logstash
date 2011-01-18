@@ -9,7 +9,20 @@ Overall priorities for 1.0: quality and stability before features
   * If it's a destabilizing change, I want it to happen before 1.0.
   * If it's a piece of code, I want tests for it before 1.0.
 
+Ruby Support:
+
+  * Ruby 1.8.7 - will support with all tests passing.
+  * Ruby 1.8.6 - will try to support with most/all tests passing.
+  * Ruby 1.9.x - will not support
+
+We cannot yet support ruby 1.9.2 as the ruby standard library differences (both
+documented and undcumented) between 1.8.7 and 1.9.x (and even between 1.9.x
+releases) are too wild to support reasonably in the logstash 1.0 time frame.
+Further, very few things ship ruby 1.9 making for another difficult-to-acquire
+dependency.
+
 Feature goals
+
   * _DONE_ Fully-supported pipe metaphor: inputs, filters, outputs.
   * Inputs: 
     * _DONE_ file
@@ -58,13 +71,6 @@ Documentation goals
   * Document how to configure elasticsearch. Indexing, sharding, mapping, etc.
   * Document best practices
   * Consistent terminology ("input", "output", "event", "filter", etc).
-
-= Christmas Hackfest =
-
-  * Mega testing work - all inputs, filters, and outputs need testing.
-  * Web interface testing
-  * Debug flags.
-  * Pick a non-yaml config language.
 
 Other todos:
 
