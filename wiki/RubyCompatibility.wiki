@@ -1,6 +1,10 @@
 #summary ruby compatibility
 
-Ruby changes pretty wildly between versions. Here's a table of support.
+Ruby changes pretty wildly between versions. 
+
+W only officially support ruby 1.8.7 at this time. I'm willing to fix small things and take patches, but 1.9.x is pretty wildly different in many core stdlib (and often undocumented) cases that it's extremely difficult to support.
+
+Here's a table of version-related stuff.
 
 || Ruby || Component || Works? ||
 || Ruby 1.8.6 || date filter || Not yet. DateTime.parse does not parse ISO8601 times ||
