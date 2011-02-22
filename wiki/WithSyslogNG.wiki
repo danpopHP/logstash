@@ -18,6 +18,8 @@ source input {
   file("/var/log/messages");   
 };
 
+# In your logstash config you would make a syslog input:
+#    syslog://127.0.0.1:8888/
 destination output {
   tcp("127.0.0.1"  
       port(8888)
@@ -64,6 +66,9 @@ template rawline {
   template("$MSG\n");
 };
 
+# Since we are sending the raw, unmodified log data, you'll
+# want logstash to use a tcp input:
+#    tcp://127.0.0.1:8888/
 destination output {
   tcp("127.0.0.1"  
       template(rawline)
