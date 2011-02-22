@@ -2,7 +2,7 @@
 
 = Shipping simple logs with syslog-ng =
 
-You might want to use syslog-ng as your shipping agent.
+You might want to use syslog-ng as your shipping agent. Then again, you might not. syslog-ng has no protocol for acknowledging message receipt (unlike rsyslog's RELP, right?) and can still drop messages as a result.
 
 Docs: http://www.balabit.com/sites/default/files/documents/syslog-ng-ose-v3.2-guide-admin-en.html/index.html-single.html
 
