@@ -1,0 +1,78 @@
+#summary Shipping logs with syslog-ng
+
+= Shipping simple logs with syslog-ng =
+
+You might want to use syslog-ng as your shipping agent.
+
+Docs: http://www.balabit.com/sites/default/files/documents/syslog-ng-ose-v3.2-guide-admin-en.html/index.html-single.html
+
+== Example Config ==
+Here's a sample config to ship lines from /var/log/messages to 127.0.0.1:8888
+
+This was done with syslog-ng 3.1.2, but should work with any 3.x client (and possibly 2.x)
+
+{{{
+@version: 3.0
+
+source input {
+  file("/var/log/messages");   
+};
+
+destination output {
+  tcp("127.0.0.1"  
+      port(8888)
+  );  
+};
+
+log {
+  source(input);
+  destination(output);
+};
+}}}
+
+The messages arrive over tcp to 127.0.0.1:8888 using the syslog relay protocol, and look something like this:
+
+{{{
+<13>Feb 22 01:17:25 snack jls: 28754
+}}}
+
+== Shipping logs unmodified ==
+
+syslog-ng likes to prefix lines with syslog headers. Sometimes that is not useful.
+
+Here's a config that works for that:
+
+{{{
+@version: 3.0
+
+source input {
+  # Watch nginx access logs
+  file("/var/log/nginx/access.log",
+       flags(no-parse,empty-lines)
+  );
+
+  # Watch nginx error logs
+  file("/var/log/nginx/error.log"
+        flags(no-parse,empty-lines)
+        
+  );
+};
+
+# This template tells syslog-ng to only include the message itself and
+# not any syslog header nonsense.
+template rawline {
+  template("$MSG\n");
+};
+
+destination output {
+  tcp("127.0.0.1"  
+      template(rawline)
+      port(8888)
+  );  
+};
+
+log {
+  source(input);
+  destination(output);
+};
+}}}
