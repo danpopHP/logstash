@@ -1,3 +1,0 @@
-#summary Similar to SizedQueue, but a Hash.
-
-Setting new values that add a new key, if the Hash is full, will block. Deleting from this hash will unblock an add that was blocked.
