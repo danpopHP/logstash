@@ -1,3 +1,3 @@
-#summary Grok
+#summary This page moved.
 
-See [http://code.google.com/p/semicomplete/wiki/Grok Grok]
+The logstash site has moved to http://logstash.net/
