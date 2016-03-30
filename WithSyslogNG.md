@@ -1,0 +1,1 @@
+The logstash site has moved to http://logstash.net/
